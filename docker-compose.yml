@@ -1,0 +1,84 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Relational DB
+  postgres:
+    image: postgres:15-alpine
+    container_name: rio-postgres
+    environment:
+      POSTGRES_USER: rio_user
+      POSTGRES_PASSWORD: rio_password
+      POSTGRES_DB: rio_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - rio-network
+
+  # Qdrant Vector DB
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: rio-qdrant
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    networks:
+      - rio-network
+
+  # Redis Cache & Broker
+  redis:
+    image: redis:7-alpine
+    container_name: rio-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - rio-network
+
+  # Temporal Server for Workflows
+  temporal:
+    image: temporalio/admin-tools:1.22.0
+    container_name: rio-temporal
+    environment:
+      - TEMPORAL_CLI_ADDRESS=temporal:7233
+    ports:
+      - "7233:7233"
+      - "8233:8233"
+    depends_on:
+      - postgres
+    networks:
+      - rio-network
+
+  # Backend FastAPI App
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: rio-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - POSTGRES_URL=postgresql://rio_user:rio_password@postgres:5432/rio_db
+      - QDRANT_URL=http://qdrant:6333
+      - REDIS_URL=redis://redis:6379/0
+      - TEMPORAL_HOST_PORT=temporal:7233
+    depends_on:
+      - postgres
+      - qdrant
+      - redis
+      - temporal
+    networks:
+      - rio-network
+
+volumes:
+  postgres_data:
+  qdrant_data:
+  redis_data:
+
+networks:
+  rio-network:
+    driver: bridge
