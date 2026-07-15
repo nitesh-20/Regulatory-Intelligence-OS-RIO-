@@ -112,6 +112,52 @@ CREATE TABLE agent_runs (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+-- 10. Organization Internal Policies (RAG Context Source)
+CREATE TABLE policies (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    organization_id UUID REFERENCES organizations(id) ON DELETE CASCADE,
+    title VARCHAR(255) NOT NULL,
+    content TEXT NOT NULL,
+    version_tag VARCHAR(50) DEFAULT '1.0.0',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 11. Policy Control to Regulation Mapping
+CREATE TABLE control_mapping (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    policy_id UUID REFERENCES policies(id) ON DELETE CASCADE,
+    regulation_id UUID REFERENCES regulations(id) ON DELETE CASCADE,
+    compliance_status VARCHAR(50) DEFAULT 'compliant', -- compliant, gap, under_review
+    confidence_score NUMERIC(3,2) NOT NULL DEFAULT 1.00,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 12. Verification Evidence for Compliance Tasks
+CREATE TABLE evidence (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    task_id UUID REFERENCES compliance_tasks(id) ON DELETE CASCADE,
+    evidence_payload JSONB NOT NULL DEFAULT '{}',
+    verification_source VARCHAR(255) NOT NULL,
+    verified_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 13. Self-Correcting RAG Evaluation Logs (Audit Harness & XAI)
+CREATE TABLE evaluation_logs (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    query TEXT NOT NULL,
+    answer TEXT NOT NULL,
+    faithfulness NUMERIC(3,2) NOT NULL,
+    groundedness NUMERIC(3,2) NOT NULL,
+    context_precision NUMERIC(3,2) NOT NULL,
+    citation_accuracy NUMERIC(3,2) NOT NULL,
+    confidence_score NUMERIC(3,2) NOT NULL,
+    iterations INT DEFAULT 1,
+    escalation_status VARCHAR(50) DEFAULT 'none', -- none, clarified, human_escalated
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Indexing for Query Performance
 CREATE INDEX idx_users_org ON users(organization_id);
 CREATE INDEX idx_regulations_cat_country ON regulations(category, country_code);
@@ -119,3 +165,8 @@ CREATE INDEX idx_reg_versions_active ON regulation_versions(regulation_id) WHERE
 CREATE INDEX idx_compliance_tasks_org_status ON compliance_tasks(organization_id, status);
 CREATE INDEX idx_audit_reports_org ON audit_reports(organization_id);
 CREATE INDEX idx_agent_runs_org ON agent_runs(organization_id, agent_name);
+CREATE INDEX idx_policies_org ON policies(organization_id);
+CREATE INDEX idx_control_mapping_policy_reg ON control_mapping(policy_id, regulation_id);
+CREATE INDEX idx_evidence_task ON evidence(task_id);
+CREATE INDEX idx_eval_logs_score ON evaluation_logs(confidence_score);
+
