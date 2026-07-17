@@ -15,7 +15,13 @@ class Settings(BaseSettings):
 
 settings = Settings()
 
-# Remove SQLite fallback to ensure strict production environment
+# Fallback database location (local sqlite inside workspace or tmp in Vercel)
+if os.getenv("VERCEL") or os.getenv("NOW_REGION"):
+    SQLITE_URL = "sqlite:////tmp/rio_db.sqlite"
+else:
+    db_dir = os.path.dirname(os.path.abspath(__file__))
+    SQLITE_URL = f"sqlite:///{os.path.join(db_dir, 'rio_db.sqlite')}"
+
 engine = None
 try:
     print(f"[Database] Connecting to PostgreSQL at {settings.POSTGRES_URL}...")
@@ -29,8 +35,11 @@ try:
     with engine.connect() as conn:
         print("[Database] PostgreSQL connection established.")
 except Exception as e:
-    print(f"[Database] FATAL: PostgreSQL connection failed: {e}. Ensure docker-compose is running.")
-    sys.exit(1)
+    print(f"[Database] PostgreSQL connection failed: {e}. Falling back to SQLite.")
+    engine = create_engine(
+        SQLITE_URL,
+        connect_args={"check_same_thread": False}
+    )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()

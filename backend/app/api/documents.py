@@ -48,6 +48,10 @@ async def upload_document(
     try:
         org = db.query(Organization).first()
         if not org:
+            from app.database.seed import seed_database
+            seed_database()
+            org = db.query(Organization).first()
+        if not org:
             raise HTTPException(status_code=500, detail="Organization not seeded.")
 
         # Read actual bytes from upload stream

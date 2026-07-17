@@ -24,10 +24,16 @@ async def execute_plan(req: PlanRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail="Failed to load PlannerAgent instance.")
         
     try:
-        # Fetch the active organization (Fintech Sandbox Org seeded earlier)
+        # Fetch the active organization
         org = db.query(Organization).first()
         if not org:
-            raise HTTPException(status_code=500, detail="Database has not been initialized or seeded.")
+            from app.database.seed import seed_database
+            print("[Planner] Auto-seeding empty database...")
+            seed_database()
+            org = db.query(Organization).first()
+            
+        if not org:
+            raise HTTPException(status_code=500, detail="Failed to initialize organization data.")
 
         # Inject DB session and organization ID for real agent execution
         initial_state = {

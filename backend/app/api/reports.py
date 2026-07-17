@@ -18,6 +18,10 @@ def generate_pdf_report(db: Session = Depends(get_db)):
         # Fetch active organization
         org = db.query(Organization).first()
         if not org:
+            from app.database.seed import seed_database
+            seed_database()
+            org = db.query(Organization).first()
+        if not org:
             raise HTTPException(status_code=500, detail="Organization not seeded.")
 
         # Fetch open tasks

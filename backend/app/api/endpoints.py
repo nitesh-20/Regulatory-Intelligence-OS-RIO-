@@ -103,6 +103,11 @@ async def create_watchlist(watchlist: WatchlistCreate, db: Session = Depends(get
     try:
         org = db.query(Organization).first()
         if not org:
+            from app.database.seed import seed_database
+            seed_database()
+            org = db.query(Organization).first()
+            
+        if not org:
             raise HTTPException(status_code=500, detail="Seed database missing.")
             
         new_wl = Watchlist(
@@ -131,6 +136,11 @@ async def create_watchlist(watchlist: WatchlistCreate, db: Session = Depends(get
 async def get_compliance_gaps(db: Session = Depends(get_db)):
     comp_agent = get_agent_instance("compliance_agent")
     org = db.query(Organization).first()
+    if not org:
+        from app.database.seed import seed_database
+        seed_database()
+        org = db.query(Organization).first()
+        
     if not comp_agent or not org:
         raise HTTPException(status_code=500, detail="ComplianceAgent or Organization not available.")
         
@@ -158,7 +168,7 @@ async def get_compliance_gaps(db: Session = Depends(get_db)):
                     policy_id="p1", # Linked policy placeholder
                     gap_description=t.description,
                     severity=t.severity,
-                    status=t.status.upper(),
+                    status=(t.status or "OPEN").upper(),
                     remediation_plan=t.remediation_plan
                 )
             )

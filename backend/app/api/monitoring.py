@@ -67,6 +67,10 @@ async def get_logs(db: Session = Depends(get_db)):
 async def run_monitoring(db: Session = Depends(get_db)):
     mon_agent = get_agent_instance("monitoring_agent")
     org = db.query(Organization).first()
+    if not org:
+        from app.database.seed import seed_database
+        seed_database()
+        org = db.query(Organization).first()
     if not mon_agent or not org:
         raise HTTPException(status_code=500, detail="MonitoringAgent or Organization not available.")
         
