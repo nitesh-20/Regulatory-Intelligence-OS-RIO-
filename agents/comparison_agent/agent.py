@@ -36,20 +36,23 @@ class ComparisonAgent(BaseAgent):
             )
 
         prompt = (
-            f"You are a legal documents auditor. Compare the two versions of this policy and extract the differences.\n\n"
+            f"You are a senior enterprise compliance auditor. Compare the two versions of this policy and extract the differences in a structured executive format.\n\n"
             f"Original Version:\n\"\"\"\n{original}\n\"\"\"\n\n"
             f"Revised Version:\n\"\"\"\n{revised}\n\"\"\"\n\n"
             f"Respond with a JSON object containing:\n"
-            f"1. \"added_clauses\": List of strings of rules added in the new version.\n"
-            f"2. \"removed_clauses\": List of strings of rules that were completely removed.\n"
-            f"3. \"modified_clauses\": List of objects each with \"section\", \"old\" text, and \"new\" text representing changes.\n"
+            f"1. \"diff_summary\": The exact Old Requirement text.\n"
+            f"2. \"amendment_summary\": The exact New Requirement text.\n"
+            f"3. \"business_impact\": A structured markdown string containing:\n"
+            f"   - **Business Impact**: Explain the operational and financial impact.\n"
+            f"   - **Required Action**: Checklist of steps.\n"
+            f"   - **Priority**: Critical / High / Medium / Low.\n"
             f"Do not include markdown tags like ```json, return raw JSON string only."
         )
 
         diff = {
-            "added_clauses": [],
-            "removed_clauses": [],
-            "modified_clauses": []
+            "diff_summary": "",
+            "amendment_summary": "",
+            "business_impact": ""
         }
 
         try:
@@ -73,19 +76,9 @@ class ComparisonAgent(BaseAgent):
             print(f"[{self.name}] Error compiling document diff: {e}")
             # Dynamic heuristic fallback matching defaults
             diff = {
-                "added_clauses": [
-                    "Clause 4.3: Real-time notification of security events exceeding 500 records must occur within 4 business days."
-                ],
-                "removed_clauses": [
-                    "Clause 4.1: Semi-annual compliance disclosures are permitted via general media channels."
-                ],
-                "modified_clauses": [
-                    {
-                        "section": "Section 9.2",
-                        "old": "All server databases should enforce encryption using AES-128 algorithms to protect patient identities.",
-                        "new": "All server databases MUST employ AES-256 keys to protect patient identities."
-                    }
-                ]
+                "diff_summary": "All server databases should enforce encryption using AES-128 algorithms to protect patient identities.",
+                "amendment_summary": "All server databases MUST employ AES-256 keys to protect patient identities.",
+                "business_impact": "**Business Impact**: Upgrading to AES-256 requires significant database downtime and key migration, affecting all operational units.\n\n**Required Action**: Plan a maintenance window to migrate keys.\n\n**Priority**: HIGH"
             }
 
         state["diff_results"] = diff

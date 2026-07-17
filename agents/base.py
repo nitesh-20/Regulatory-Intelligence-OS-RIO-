@@ -52,7 +52,19 @@ class BaseAgent:
         """
         Helper to call Gemini. Falls back to generating mock content if API key is mock/missing.
         """
+        GLOBAL_FORMATTING_RULES = """
+====== GLOBAL FORMATTING RULES ======
+1. Write like a senior enterprise compliance consultant (McKinsey/Bain style).
+2. ALWAYS use structured Headings, Sub-headings, and Bullet lists.
+3. NEVER return huge walls of text. Avoid long paragraphs.
+4. Always highlight Business Impact, Priorities, and Owners.
+5. Use tables where appropriate.
+6. Format explicitly for CTOs, Compliance Officers, and Legal Teams.
+=====================================
+"""
         instruction = system_instruction or self.system_prompt
+        instruction += f"\n\n{GLOBAL_FORMATTING_RULES}"
+        
         if self.is_mock:
             # Simulate slight latency for natural feel
             time.sleep(0.5)

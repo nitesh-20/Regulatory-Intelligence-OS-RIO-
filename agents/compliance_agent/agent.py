@@ -69,11 +69,14 @@ class ComplianceAgent(BaseAgent):
             f"Policy Context:\n\"\"\"\n{policy_context}\n\"\"\"\n\n"
             f"Compare these documents and identify if there is a gap (e.g. policy does not address, "
             f"policy is less secure, policy has wrong values, or policy lacks explicit standards).\n"
-            f"Return a JSON list of identified gaps. Each gap should contain:\n"
+            f"Return a JSON list of identified gaps. Each gap MUST contain:\n"
             f"- \"clause\": Name of the regulatory clause/concern.\n"
-            f"- \"gap_details\": Explicit details on where the policy falls short.\n"
+            f"- \"gap_details\": Detailed explanation of why the gap exists and which specific regulation requires the change.\n"
+            f"- \"business_impact\": Explain the operational, financial, and compliance impact.\n"
             f"- \"severity\": Severity (CRITICAL, HIGH, MEDIUM, LOW).\n"
-            f"- \"remediation_plan\": Direct remediation steps to align the policy.\n"
+            f"- \"remediation_plan\": Direct step-by-step remediation plan to align the policy.\n"
+            f"- \"owner\": Suggested owner team (e.g., Security Team, Legal Team).\n"
+            f"- \"deadline\": Suggested deadline (e.g., 7 Days, 30 Days).\n"
             f"If there are no gaps, return an empty list [].\n"
             f"Do not include markdown tags like ```json, return raw JSON string only."
         )
@@ -132,14 +135,17 @@ class ComplianceAgent(BaseAgent):
                 ).delete()
                 
                 for g in gaps:
+                    desc_md = f"**Why the gap exists:**\n{g.get('gap_details', '')}\n\n**Business Impact:**\n{g.get('business_impact', 'Unknown')}"
+                    remed_md = f"{g.get('remediation_plan', '')}\n\n**Owner:** {g.get('owner', 'Compliance Team')}\n**Deadline:** {g.get('deadline', 'TBD')}"
+                    
                     task = ComplianceTask(
                         organization_id=org_id,
                         regulation_id=reg_id,
-                        title=f"{g['clause']} Gap",
-                        description=g['gap_details'],
-                        severity=g['severity'] if g['severity'] in ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'] else 'MEDIUM',
+                        title=f"{g.get('clause', 'Compliance Gap')} Gap",
+                        description=desc_md,
+                        severity=g.get('severity', 'MEDIUM') if g.get('severity') in ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'] else 'MEDIUM',
                         status="open",
-                        remediation_plan=g['remediation_plan']
+                        remediation_plan=remed_md
                     )
                     db.add(task)
                 db.commit()

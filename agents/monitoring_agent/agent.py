@@ -62,7 +62,12 @@ class MonitoringAgent(BaseAgent):
             f"3. \"country_code\": Country code (US, IN, EU).\n"
             f"4. \"category\": Classification (Cybersecurity, Privacy, AI, Financial).\n"
             f"5. \"source_url\": Link where this was posted.\n"
-            f"6. \"summary\": A brief 1-sentence abstract of the rule.\n"
+            f"6. \"summary\": A Markdown string strictly containing:\n"
+            f"   - **Summary**: Brief abstract.\n"
+            f"   - **Affected Industries**: e.g., Fintech, Banks.\n"
+            f"   - **Business Impact**: Why it matters.\n"
+            f"   - **Action Required**: Immediate steps.\n"
+            f"   - **Priority**: High/Medium/Low.\n"
             f"7. \"version_tag\": A tag like '2026.1'.\n"
             f"8. \"commit_summary\": A change log summary.\n"
             f"If none are found, return an empty list [].\n"
@@ -102,7 +107,9 @@ class MonitoringAgent(BaseAgent):
                             authority=r.get("authority", "SEC"),
                             country_code=r.get("country_code", "US"),
                             category=r.get("category", "Cybersecurity"),
-                            source_url=r.get("source_url", feed_url)
+                            source_url=r.get("source_url", feed_url),
+                            summary=r.get("summary", "**Affected Industries**: Unknown\n**Business Impact**: Needs review.\n**Action Required**: TBD\n**Priority**: MEDIUM"),
+                            severity="HIGH"
                         )
                         db.add(reg)
                         db.flush() # Populate reg.id

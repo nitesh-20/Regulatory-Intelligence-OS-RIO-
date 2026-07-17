@@ -137,18 +137,23 @@ class PlannerAgent(BaseAgent):
                 db.rollback()
                 print(f"[PlannerAgent] Error saving run log to database: {e}")
         
-        # Construct final response
-        summary_text = state.get("summary", "Analysis completed successfully.")
-        gaps_count = len(state.get("gaps_found", []))
-        risk_score = state.get("risk_score", 45)
-        
-        state["final_response"] = (
-            f"### Executive Compliance Summary\n"
-            f"Processed request: **\"{goal}\"**\n\n"
-            f"- **System Verdict**: Action required\n"
-            f"- **Active Compliance Twin Risk Score**: {risk_score}/100\n"
-            f"- **Identified Policy Gaps**: {gaps_count} open item(s)\n\n"
-            f"**Planner Decisions & Sequence**: {', '.join(plan['sequence'])}"
+        # Construct final response using LLM to ensure McKinsey/Bain style
+        final_prompt = (
+            f"Generate a final executive compliance report for the user's request: '{goal}'.\n"
+            f"Agent Execution Sequence: {', '.join(plan['sequence'])}\n"
+            f"Current Risk Score: {risk_score}/100\n"
+            f"Open Policy Gaps: {gaps_count}\n"
+            f"Raw Sub-Agent Insights: {summary_text}\n\n"
+            "You MUST format the output using the following exact sections with Markdown headers:\n"
+            "### Executive Summary\n"
+            "### Key Findings (Use bullet points)\n"
+            "### Business Impact (Explain impacted units and operational/financial impact)\n"
+            "### Risk Assessment (Include Risk Level and Score)\n"
+            "### Required Actions (Checklist with Priority, Owner, and ETA)\n"
+            "### Next Best Actions\n"
         )
+        
+        final_response = self.call_llm(final_prompt)
+        state["final_response"] = final_response
         
         return state
