@@ -76,15 +76,15 @@ export default function Layout() {
     <div className="flex h-screen bg-[#08080a] text-zinc-100 font-sans antialiased overflow-hidden select-none">
       
       {/* Linear-Style Minimal Sidebar */}
-      <aside className="w-56 bg-[#09090b] border-r border-zinc-800/80 flex flex-col justify-between relative z-20">
+      <aside className="w-64 bg-[#09090b] border-r border-zinc-800/80 flex flex-col justify-between relative z-20">
         <div>
           {/* Logo Header */}
-          <div className="h-14 flex items-center px-4 border-b border-zinc-900">
-            <Link to="/" className="flex items-center gap-2.5">
-              <div className="w-6.5 h-6.5 rounded bg-zinc-100 flex items-center justify-center border border-zinc-200">
-                <Shield className="w-3.5 h-3.5 text-zinc-900" />
+          <div className="h-16 flex items-center px-5 border-b border-zinc-900">
+            <Link to="/" className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-zinc-100 flex items-center justify-center border border-zinc-200 shadow-sm">
+                <Shield className="w-4 h-4 text-zinc-900" />
               </div>
-              <span className="font-semibold text-xs tracking-tight text-zinc-150">
+              <span className="font-semibold text-sm tracking-tight text-zinc-150">
                 RIO Compliance
               </span>
             </Link>
@@ -98,7 +98,7 @@ export default function Layout() {
                 <Link
                   key={item.name}
                   to={item.href}
-                  className={`flex items-center gap-2.5 px-3 py-2 rounded-md text-[11px] font-medium relative group transition-colors ${
+                  className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium relative group transition-colors ${
                     isActive ? 'text-zinc-100' : 'text-zinc-400 hover:text-zinc-200'
                   }`}
                 >
@@ -110,7 +110,7 @@ export default function Layout() {
                       transition={{ type: 'spring', stiffness: 380, damping: 30 }}
                     />
                   )}
-                  <item.icon className={`w-3.5 h-3.5 ${isActive ? 'text-zinc-150' : 'text-zinc-500 group-hover:text-zinc-300'}`} />
+                  <item.icon className={`w-4 h-4 ${isActive ? 'text-zinc-150' : 'text-zinc-500 group-hover:text-zinc-300'}`} />
                   <span>{item.name}</span>
                 </Link>
               );
@@ -119,16 +119,16 @@ export default function Layout() {
         </div>
 
         {/* User Footer Panel */}
-        <div className="p-3 border-t border-zinc-900">
-          <div className="flex items-center gap-2.5 p-2 rounded-lg bg-zinc-900/40 border border-zinc-800/60 hover:bg-zinc-900/70 transition-colors">
-            <div className="w-6 h-6 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center text-zinc-300">
-              <User className="w-3.5 h-3.5" />
+        <div className="p-4 border-t border-zinc-900">
+          <div className="flex items-center gap-3 p-3 rounded-xl bg-zinc-900/40 border border-zinc-800/60 hover:bg-zinc-900/70 transition-colors">
+            <div className="w-8 h-8 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center text-zinc-300 shadow-inner">
+              <User className="w-4 h-4" />
             </div>
             <div className="flex-1 overflow-hidden">
-              <h4 className="text-[10px] font-semibold text-zinc-200 truncate">Regulatory Sandbox</h4>
-              <p className="text-[8.5px] text-zinc-500 truncate">FinTech Suite</p>
+              <h4 className="text-xs font-semibold text-zinc-200 truncate">Regulatory Sandbox</h4>
+              <p className="text-[10px] text-zinc-500 truncate mt-0.5">FinTech Suite</p>
             </div>
-            <kbd className="text-[9px] text-zinc-500 font-bold px-1.5 py-0.5 rounded bg-zinc-950 border border-zinc-800 tracking-tighter shadow-inner pointer-events-none">
+            <kbd className="text-[10px] text-zinc-500 font-bold px-2 py-1 rounded-md bg-zinc-950 border border-zinc-800 tracking-tighter shadow-inner pointer-events-none">
               ⌘K
             </kbd>
           </div>
@@ -139,33 +139,33 @@ export default function Layout() {
       <div className="flex-1 flex flex-col overflow-hidden">
         
         {/* Sleek Vercel-Style Top Header */}
-        <header className="h-14 border-b border-zinc-800/80 bg-[#08080a] flex items-center justify-between px-6 z-10">
-          <div className="flex items-center gap-3">
+        <header className="h-16 border-b border-zinc-800/80 bg-[#08080a] flex items-center justify-between px-8 z-10">
+          <div className="flex items-center gap-4">
             {/* Search Trigger (⌘K prompt indicator) */}
             <div 
               onClick={() => setIsOpen(true)}
-              className="flex items-center gap-2.5 px-3 py-1.5 rounded-md bg-zinc-900/40 border border-zinc-800/80 text-[10.5px] text-zinc-450 hover:bg-zinc-900 hover:border-zinc-750 transition-all cursor-pointer w-60"
+              className="flex items-center gap-3 px-4 py-2 rounded-lg bg-zinc-900/40 border border-zinc-800/80 text-xs text-zinc-450 hover:bg-zinc-900 hover:border-zinc-750 transition-all cursor-pointer w-72"
             >
-              <Search className="w-3.5 h-3.5 text-zinc-500" />
+              <Search className="w-4 h-4 text-zinc-500" />
               <span>Search platform...</span>
-              <kbd className="ml-auto text-[8.5px] font-bold px-1 py-0.5 rounded bg-zinc-950 border border-zinc-850 text-zinc-500 select-none">
+              <kbd className="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-zinc-950 border border-zinc-850 text-zinc-500 select-none">
                 ⌘K
               </kbd>
             </div>
           </div>
 
-          <div className="flex items-center gap-5">
+          <div className="flex items-center gap-6">
             {/* Notifications */}
             <div className="relative cursor-pointer text-zinc-400 hover:text-zinc-200 p-1">
-              <Bell className="w-3.5 h-3.5" />
-              <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
+              <Bell className="w-4 h-4" />
+              <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-indigo-500 border-2 border-[#08080a]"></span>
             </div>
 
-            <div className="h-4 w-[1px] bg-zinc-800"></div>
+            <div className="h-5 w-[1px] bg-zinc-800"></div>
 
             {/* Platform Score */}
             <div className="flex items-center gap-2">
-              <span className="text-[9.5px] font-semibold px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+              <span className="text-xs font-semibold px-3 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                 Compliance Score: 87%
               </span>
             </div>
