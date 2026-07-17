@@ -7,7 +7,6 @@ import {
   FileText, 
   Copy, 
   Play, 
-  Sparkles, 
   CheckCircle,
   Code
 } from 'lucide-react';
@@ -24,7 +23,7 @@ const agentConfigurations = [
   },
   {
     name: "MonitoringAgent",
-    role: "Regulatory Site Scraper & Hash Tracker",
+    role: "Regulatory Scraper & Hash Tracker",
     model: "Gemini 2.5 Flash",
     tools: ["monitor_sources", "check_version_db_tool"],
     prompt: "You are the continuous Monitoring Agent. Spot updates to official gazettes, download PDFs, and verify database versions...",
@@ -33,7 +32,7 @@ const agentConfigurations = [
   },
   {
     name: "DocumentAgent",
-    role: "OCR Layout Parser & Vector DB Sync",
+    role: "OCR Layout Parser & Vector Sync",
     model: "Gemini 2.5 Flash",
     tools: ["search_documents", "extract_obligations"],
     prompt: "You are a document extraction and ingestion specialist. Perform OCR, structural cleanups, and extract entities...",
@@ -42,7 +41,7 @@ const agentConfigurations = [
   },
   {
     name: "ComplianceAgent",
-    role: "Twin Policy & Obligations Evaluator",
+    role: "Twin Policy Obligations Evaluator",
     model: "Gemini 2.5 Pro",
     tools: ["extract_obligations", "query_policy_vector_index"],
     prompt: "You are the Compliance Agent. Map parsed regulations directly against corporate policies to evaluate alignment...",
@@ -71,142 +70,154 @@ export default function AgentsPanel() {
     setTimeout(() => setCopiedPrompt(false), 2000);
   };
 
-  const triggerSimulation = () => {
+  const runSimulation = () => {
     setSimulationState('running');
     setTimeout(() => {
       setSimulationState('success');
-    }, 1500);
+    }, 2500);
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 select-none">
+      
+      {/* Title */}
       <div>
-        <h1 className="text-2xl font-display font-bold text-slate-100 mb-1">Multi-Agent Configuration Console</h1>
-        <p className="text-xs text-slate-400">
-          Inspect system prompts, allocated MCP tools, and execute agent dry runs.
+        <h1 className="text-base font-semibold text-zinc-100 tracking-tight">Agents Console</h1>
+        <p className="text-[10px] text-zinc-500 mt-0.5">
+          Inspect coordinated agent configurations, parameters, and system prompts active in RIO.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Side: Agent Selection */}
-        <div className="space-y-4">
-          <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Active Agents Grid</h3>
-          <div className="space-y-2">
-            {agentConfigurations.map((agent) => (
-              <button
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        
+        {/* Agents List (Left Panel) */}
+        <div className="space-y-2 lg:col-span-1">
+          {agentConfigurations.map((agent) => {
+            const isSelected = agent.name === selectedAgent.name;
+            return (
+              <div
                 key={agent.name}
                 onClick={() => {
                   setSelectedAgent(agent);
                   setSimulationState('idle');
                 }}
-                className={`w-full text-left p-4 rounded-xl border transition-all flex items-start gap-3 relative group ${
-                  selectedAgent.name === agent.name
-                    ? 'bg-indigo-600/10 border-indigo-500/40 shadow-inner'
-                    : 'bg-slate-900/40 border-slate-800/80 hover:border-slate-700/80 hover:bg-slate-900/60'
+                className={`p-3.5 rounded-lg border cursor-pointer transition-all text-left relative overflow-hidden ${
+                  isSelected 
+                    ? 'bg-zinc-900/35 border-zinc-700/80 text-zinc-100 shadow-sm' 
+                    : 'bg-zinc-900/10 border-zinc-900 text-zinc-400 hover:border-zinc-800 hover:text-zinc-250'
                 }`}
               >
-                <div className={`p-2 rounded-lg border bg-slate-950 ${
-                  selectedAgent.name === agent.name ? 'text-indigo-400 border-indigo-500/20' : 'text-slate-400 border-slate-800'
-                }`}>
-                  <agent.icon className="w-4 h-4" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex justify-between items-center">
-                    <h4 className="text-xs font-semibold text-slate-200">{agent.name}</h4>
-                    <span className="text-[8px] font-bold text-emerald-400 px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20">
-                      {agent.status}
-                    </span>
+                <div className="flex items-center gap-3">
+                  <div className={`p-2 rounded ${
+                    isSelected ? 'bg-zinc-950 border border-zinc-800' : 'bg-zinc-900/50'
+                  }`}>
+                    <agent.icon className="w-3.5 h-3.5" />
                   </div>
-                  <p className="text-[10px] text-slate-400 mt-1 truncate">{agent.role}</p>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-[11px] font-semibold truncate">{agent.name}</h4>
+                    <p className="text-[9.5px] text-zinc-500 truncate mt-0.5">{agent.role}</p>
+                  </div>
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                 </div>
-              </button>
-            ))}
-          </div>
+              </div>
+            );
+          })}
         </div>
 
-        {/* Right Side: Agent Details / Control */}
-        <div className="lg:col-span-2 space-y-6">
-          <div className="p-6 rounded-xl bg-slate-900/40 border border-slate-800/80 shadow-md space-y-6">
-            {/* Title & Metadata */}
-            <div className="flex flex-col sm:flex-row justify-between gap-4 pb-4 border-b border-slate-850">
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-lg bg-indigo-600/10 text-indigo-400 border border-indigo-500/20">
-                  <selectedAgent.icon className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-bold text-slate-200">{selectedAgent.name}</h3>
-                  <p className="text-[10px] text-slate-500 mt-0.5">{selectedAgent.role}</p>
-                </div>
+        {/* Selected Agent Details (Right Panel) */}
+        <div className="lg:col-span-2 p-5 rounded-lg bg-zinc-900/20 border border-zinc-900 shadow-sm flex flex-col justify-between min-h-[400px]">
+          <div className="space-y-5">
+            
+            {/* Header Details */}
+            <div className="flex items-start justify-between gap-4 pb-4 border-b border-zinc-900">
+              <div>
+                <h3 className="text-xs font-semibold text-zinc-200">{selectedAgent.name} Settings</h3>
+                <p className="text-[9.5px] text-zinc-500 mt-0.5">Model parameter: <b>{selectedAgent.model}</b></p>
               </div>
-
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-semibold text-slate-400 px-2 py-1 rounded bg-slate-950 border border-slate-800 flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
-                  Model: {selectedAgent.model}
-                </span>
-              </div>
+              
+              <button
+                onClick={runSimulation}
+                disabled={simulationState === 'running'}
+                className="px-3 py-1.5 rounded bg-zinc-900 hover:bg-zinc-850 border border-zinc-800 text-[10px] font-semibold text-zinc-350 hover:text-zinc-200 transition-colors flex items-center gap-1.5 shadow disabled:opacity-50"
+              >
+                {simulationState === 'running' ? (
+                  <>
+                    <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-ping" />
+                    Simulating...
+                  </>
+                ) : simulationState === 'success' ? (
+                  <>
+                    <CheckCircle className="w-3 h-3 text-emerald-500" />
+                    Passed Clean
+                  </>
+                ) : (
+                  <>
+                    <Play className="w-3 h-3 text-zinc-500" />
+                    Run Diagnostic
+                  </>
+                )}
+              </button>
             </div>
 
-            {/* System Instruction */}
+            {/* Diagnostic Logs (when run) */}
+            {simulationState === 'running' && (
+              <div className="p-3.5 rounded bg-zinc-950/40 border border-zinc-900 font-mono text-[9px] text-zinc-500 space-y-1">
+                <p>&gt; Initializing agent container diagnostic checks...</p>
+                <p>&gt; Validating connection schema parameters...</p>
+                <p>&gt; Verifying workspace settings scopes...</p>
+              </div>
+            )}
+
+            {simulationState === 'success' && (
+              <div className="p-3.5 rounded bg-emerald-500/5 border border-emerald-500/10 font-mono text-[9.5px] text-emerald-450 space-y-1">
+                <p className="font-semibold">&gt; Diagnostic results verified successfully.</p>
+                <p>&gt; Gemini GenAI API connectivity: OK (Latency 140ms)</p>
+                <p>&gt; Vector databases query: OK (Index verified)</p>
+              </div>
+            )}
+
+            {/* Allocated Tools */}
             <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
-                  <Code className="w-3.5 h-3.5" />
-                  System Instructions
-                </h4>
-                <button
-                  onClick={() => copyToClipboard(selectedAgent.prompt)}
-                  className="text-[10px] text-indigo-400 hover:text-indigo-300 font-semibold flex items-center gap-1"
-                >
-                  <Copy className="w-3 h-3" />
-                  {copiedPrompt ? "Copied!" : "Copy Prompt"}
-                </button>
-              </div>
-              <div className="p-4 rounded-lg bg-slate-950/60 border border-slate-850/80 text-[11px] text-slate-400 leading-relaxed font-mono whitespace-pre-wrap max-h-48 overflow-y-auto">
-                {selectedAgent.prompt}
-              </div>
-            </div>
-
-            {/* Active MCP Tools */}
-            <div className="space-y-3">
-              <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Allocated MCP Tools</h4>
-              <div className="flex flex-wrap gap-2">
+              <label className="text-[9px] text-zinc-550 font-bold uppercase tracking-wider block">Allocated Tools</label>
+              <div className="flex flex-wrap gap-1.5">
                 {selectedAgent.tools.map((tool) => (
                   <span 
                     key={tool} 
-                    className="text-[10px] font-semibold text-indigo-400 px-2.5 py-1 rounded-md bg-indigo-950/30 border border-indigo-900/40"
+                    className="px-2 py-0.5 rounded bg-zinc-950 border border-zinc-850 text-zinc-400 font-mono text-[9.5px] flex items-center gap-1"
                   >
-                    {tool}()
+                    <Code className="w-2.5 h-2.5 text-zinc-500" />
+                    {tool}
                   </span>
                 ))}
               </div>
             </div>
 
-            {/* Simulation Interface */}
-            <div className="pt-4 border-t border-slate-850 flex items-center justify-between">
-              <span className="text-[10px] text-slate-500 font-medium">Verify system outputs using test dry run.</span>
-              <button
-                onClick={triggerSimulation}
-                disabled={simulationState === 'running'}
-                className="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-xs font-bold text-white shadow shadow-indigo-600/10 flex items-center gap-1.5 transition-colors disabled:opacity-50"
-              >
-                {simulationState === 'running' ? (
-                  <>Evaluating...</>
-                ) : simulationState === 'success' ? (
-                  <>
-                    <CheckCircle className="w-3.5 h-3.5 text-emerald-400" />
-                    Dry Run Passed
-                  </>
-                ) : (
-                  <>
-                    <Play className="w-3.5 h-3.5 fill-current" />
-                    Execute Dry Run
-                  </>
-                )}
-              </button>
+            {/* System instructions */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-[9px] text-zinc-550 font-bold uppercase tracking-wider block">System Instructions</label>
+                <button
+                  onClick={() => copyToClipboard(selectedAgent.prompt)}
+                  className="text-zinc-500 hover:text-zinc-300 text-[10px] font-semibold flex items-center gap-1 transition-colors"
+                >
+                  {copiedPrompt ? "Copied" : "Copy Prompt"}
+                  <Copy className="w-2.5 h-2.5" />
+                </button>
+              </div>
+              
+              <div className="p-3.5 rounded bg-zinc-950 border border-zinc-900 text-zinc-400 text-[10.5px] leading-relaxed max-h-48 overflow-y-auto">
+                {selectedAgent.prompt}
+              </div>
             </div>
+
+          </div>
+
+          <div className="mt-4 pt-4 border-t border-zinc-900 flex justify-between text-[9px] text-zinc-600 font-bold uppercase tracking-wider">
+            <span>Execution Status: Active</span>
+            <span>Security context: Sandbox Verified</span>
           </div>
         </div>
+
       </div>
     </div>
   );

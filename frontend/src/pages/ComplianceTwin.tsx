@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Upload, Shield, FileText, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
+import { Upload, Shield, FileText, Loader2, CheckCircle } from 'lucide-react';
 
 export default function ComplianceTwin() {
   const [policies, setPolicies] = useState<any[]>([]);
@@ -46,7 +46,6 @@ export default function ComplianceTwin() {
     const file = files[0];
     setUploading(true);
     
-    // Prepare multi-part form payload
     const formData = new FormData();
     formData.append("file", file);
     formData.append("category", "General");
@@ -58,7 +57,6 @@ export default function ComplianceTwin() {
       });
       
       if (response.ok) {
-        // Refresh policies and gaps list to show newly compiled items and self-correcting gaps
         await fetchTwinData();
       } else {
         alert("Failed to parse and index document.");
@@ -75,8 +73,7 @@ export default function ComplianceTwin() {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Hidden file input */}
+    <div className="space-y-6 select-none">
       <input 
         type="file" 
         ref={fileInputRef} 
@@ -85,66 +82,69 @@ export default function ComplianceTwin() {
         accept=".pdf,.txt,.md"
       />
 
-      {/* Title */}
+      {/* Header */}
       <div>
-        <h1 className="text-2xl font-display font-bold text-slate-100 mb-1">Compliance Twin</h1>
-        <p className="text-xs text-slate-400">
-          Upload and index internal policies, security frameworks, and controls. The agent evaluates updates directly against this twin.
+        <h1 className="text-base font-semibold text-zinc-100 tracking-tight">Compliance Twin</h1>
+        <p className="text-[10px] text-zinc-500 mt-0.5">
+          Upload and index internal policy documents. The compliance system evaluates update gaps directly against this twin.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Upload Column */}
-        <div className="space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        
+        {/* Actions Column */}
+        <div className="space-y-5">
+          
           {/* File Upload Zone */}
           <div 
             onClick={handleFileSelect}
-            className="p-6 rounded-xl bg-slate-900/40 border border-dashed border-slate-800 hover:border-indigo-500/40 transition-colors flex flex-col items-center justify-center text-center cursor-pointer group"
+            className="p-5 rounded-lg bg-zinc-900/10 border border-dashed border-zinc-800 hover:border-zinc-700 transition-colors flex flex-col items-center justify-center text-center cursor-pointer group"
           >
-            <div className="p-3 rounded-full bg-slate-950 border border-slate-800 text-slate-400 mb-3 group-hover:text-indigo-400 transition-colors">
+            <div className="p-2.5 rounded bg-zinc-900/50 border border-zinc-800 text-zinc-400 mb-3 group-hover:text-zinc-200 transition-colors">
               {uploading ? (
-                <Loader2 className="w-5 h-5 animate-spin text-indigo-400" />
+                <Loader2 className="w-4 h-4 animate-spin text-zinc-200" />
               ) : (
-                <Upload className="w-5 h-5" />
+                <Upload className="w-4 h-4" />
               )}
             </div>
-            <h4 className="text-xs font-semibold text-slate-200">
-              {uploading ? "Analyzing & Indexing..." : "Upload Policy Documents"}
+            <h4 className="text-[11px] font-semibold text-zinc-200">
+              {uploading ? "Analyzing & Indexing..." : "Upload Policy Document"}
             </h4>
-            <p className="text-[10px] text-slate-500 mt-1 max-w-[200px] leading-relaxed">
+            <p className="text-[9.5px] text-zinc-550 mt-1 max-w-[180px] leading-relaxed">
               {uploading 
-                ? "Running Gemini entity analysis, chunking, and vector store embedding computation."
-                : "Support PDF, Markdown, TXT. Files are parsed, chunked, and vectorized automatically."
+                ? "Extracting obligations using Gemini Flash..."
+                : "Supports PDF, Markdown, TXT. Files are chunked and vectorized instantly."
               }
             </p>
             <button 
               disabled={uploading}
-              className="mt-4 px-3 py-1.5 rounded-lg bg-indigo-600/30 text-indigo-400 border border-indigo-500/20 text-[10px] font-bold disabled:opacity-50"
+              className="mt-3.5 px-3 py-1.5 rounded bg-zinc-900 hover:bg-zinc-850 border border-zinc-800 text-[10px] font-semibold text-zinc-300 disabled:opacity-50"
             >
-              {uploading ? "Please Wait" : "Select Files"}
+              {uploading ? "Please Wait" : "Select File"}
             </button>
           </div>
 
-          {/* Active Policies List */}
-          <div className="p-6 rounded-xl bg-slate-900/40 border border-slate-800/80 shadow-md">
-            <h3 className="text-xs font-bold text-slate-300 mb-4 flex items-center gap-1.5">
-              <Shield className="w-4 h-4 text-indigo-400" />
-              Indexed Corporate Policies
+          {/* Policy index List */}
+          <div className="p-5 rounded-lg bg-zinc-900/20 border border-zinc-900 shadow-sm">
+            <h3 className="text-[11.5px] font-semibold text-zinc-300 mb-3.5 flex items-center gap-2">
+              <Shield className="w-3.5 h-3.5 text-zinc-500" />
+              Indexed Policies
             </h3>
-            <div className="space-y-3">
+            
+            <div className="space-y-2">
               {loading ? (
-                <div className="text-[11px] text-slate-500 flex items-center gap-1.5 py-4 justify-center">
-                  <Loader2 className="w-4.5 h-4.5 animate-spin" /> Loading policies...
+                <div className="text-[10px] text-zinc-500 flex items-center gap-1.5 py-4 justify-center">
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" /> Loading policies...
                 </div>
               ) : policies.length === 0 ? (
-                <p className="text-[10px] text-slate-500 py-4 text-center">No policies currently indexed.</p>
+                <p className="text-[10px] text-zinc-650 py-4 text-center">No indexed corporate files.</p>
               ) : (
                 policies.map((policy) => (
-                  <div key={policy.id} className="p-3 rounded-lg bg-slate-950/40 border border-slate-850 flex items-start gap-3">
-                    <FileText className="w-4 h-4 text-slate-400 mt-0.5" />
+                  <div key={policy.id} className="p-2.5 rounded bg-zinc-900/30 border border-zinc-900 flex items-start gap-2.5">
+                    <FileText className="w-3.5 h-3.5 text-zinc-500 mt-0.5" />
                     <div className="flex-1 min-w-0">
-                      <h4 className="text-[11px] font-semibold text-slate-200 truncate">{policy.name}</h4>
-                      <p className="text-[9px] text-slate-500 mt-0.5">{policy.size} • {policy.uploaded} ({policy.chunks} chunks)</p>
+                      <h4 className="text-[10px] font-semibold text-zinc-250 truncate">{policy.name}</h4>
+                      <p className="text-[8.5px] text-zinc-600 mt-0.5">{policy.size} • {policy.uploaded} ({policy.chunks} chunks)</p>
                     </div>
                     <span className="text-[8px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shrink-0">
                       {policy.status}
@@ -156,38 +156,35 @@ export default function ComplianceTwin() {
           </div>
         </div>
 
-        {/* Gaps Column */}
-        <div className="lg:col-span-2 p-6 rounded-xl bg-slate-900/40 border border-slate-800/80 shadow-md">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-2">
-              <div className="w-1.5 h-6 rounded-full bg-rose-500"></div>
-              <h3 className="font-display font-semibold text-slate-200">Active Compliance Gaps</h3>
-            </div>
-            <span className={`text-[10px] font-bold px-2 py-0.5 rounded flex items-center gap-1.5 ${
+        {/* Gaps List Column */}
+        <div className="lg:col-span-2 p-5 rounded-lg bg-zinc-900/20 border border-zinc-900 shadow-sm">
+          <div className="flex items-center justify-between mb-5">
+            <h3 className="text-xs font-semibold text-zinc-200">Active Gap Checklist</h3>
+            <span className={`text-[9px] font-semibold px-2 py-0.5 rounded ${
               gaps.length > 0
                 ? 'text-rose-400 bg-rose-500/10 border border-rose-500/20'
                 : 'text-emerald-400 bg-emerald-500/10 border border-emerald-500/20'
             }`}>
-              {gaps.length > 0 ? "Needs Attention" : "Fully Compliant"}
+              {gaps.length > 0 ? `${gaps.length} Action Needed` : "Fully Compliant"}
             </span>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-3">
             {loading ? (
-              <div className="text-xs text-slate-500 flex items-center gap-1.5 py-8 justify-center">
-                <Loader2 className="w-4.5 h-4.5 animate-spin" /> Evaluating compliance logs...
+              <div className="text-[10px] text-zinc-500 flex items-center gap-1.5 py-8 justify-center">
+                <Loader2 className="w-3.5 h-3.5 animate-spin" /> Verifying twin matrices...
               </div>
             ) : gaps.length === 0 ? (
-              <div className="p-8 rounded-xl bg-slate-950/20 border border-slate-900 flex flex-col items-center justify-center text-center">
-                <CheckCircle className="w-8 h-8 text-emerald-500/80 mb-2" />
-                <h4 className="text-xs font-semibold text-slate-300">All Systems Clear</h4>
-                <p className="text-[10px] text-slate-500 mt-1 max-w-xs leading-relaxed">
-                  No active gaps or discrepancies identified. Your uploaded controls are in complete alignment with current regulations.
+              <div className="p-8 rounded bg-zinc-900/10 border border-zinc-900 flex flex-col items-center justify-center text-center">
+                <CheckCircle className="w-6 h-6 text-emerald-500/80 mb-2" />
+                <h4 className="text-[11px] font-semibold text-zinc-300 font-display">All Systems Aligned</h4>
+                <p className="text-[9.5px] text-zinc-550 mt-1 max-w-[220px] leading-relaxed">
+                  No active gaps identified. Your controls are fully in alignment with all active tracking rules.
                 </p>
               </div>
             ) : (
               gaps.map((gap) => (
-                <div key={gap.id} className="p-4 rounded-xl bg-slate-950/40 border border-slate-850">
+                <div key={gap.id} className="p-4 rounded bg-zinc-900/30 border border-zinc-900">
                   <div className="flex items-center justify-between gap-3 mb-2">
                     <div className="flex items-center gap-2">
                       <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded ${
@@ -197,19 +194,23 @@ export default function ComplianceTwin() {
                       }`}>
                         {gap.severity}
                       </span>
-                      <h4 className="text-xs font-semibold text-slate-200">{gap.gap_description.split("Gap")[0]}</h4>
+                      <h4 className="text-[11px] font-semibold text-zinc-200">{gap.gap_description.split("Gap")[0]}</h4>
                     </div>
-                    <span className="text-[9px] text-slate-400 font-medium">Status: <span className={gap.status === 'RESOLVED' ? 'text-emerald-400 font-semibold' : 'text-rose-400 font-semibold'}>{gap.status}</span></span>
+                    <span className={`text-[9px] font-bold ${
+                      gap.status === 'RESOLVED' ? 'text-emerald-450' : 'text-rose-400'
+                    }`}>
+                      {gap.status}
+                    </span>
                   </div>
 
-                  <p className="text-[11px] text-slate-400 leading-relaxed mb-3">
+                  <p className="text-zinc-450 text-[10.5px] leading-relaxed mb-3">
                     {gap.gap_description}
                   </p>
 
-                  <div className="p-3 rounded-lg bg-indigo-950/20 border border-indigo-900/30">
-                    <span className="text-[9px] font-bold text-indigo-400 uppercase tracking-wider block mb-1">REMEDIATION ACTION REQUIRED</span>
-                    <p className="text-[10.5px] text-indigo-200 leading-relaxed">
-                      {gap.remediation_plan || "Establish encryption standards in configurations."}
+                  <div className="p-3 rounded bg-zinc-950/40 border border-zinc-900">
+                    <span className="text-[8.5px] font-bold text-zinc-500 uppercase tracking-widest block mb-1">REMEDIATION ACTION</span>
+                    <p className="text-[10px] text-zinc-300 leading-relaxed">
+                      {gap.remediation_plan || "Update alignment configurations to reflect targets."}
                     </p>
                   </div>
                 </div>
@@ -217,6 +218,7 @@ export default function ComplianceTwin() {
             )}
           </div>
         </div>
+
       </div>
     </div>
   );

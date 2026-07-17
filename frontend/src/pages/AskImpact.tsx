@@ -4,14 +4,13 @@ import {
   User, 
   Send, 
   Loader2, 
-  ShieldCheck, 
-  HelpCircle, 
   Cpu, 
   Clock, 
-  Zap, 
-  Activity, 
-  CheckCircle,
-  AlertCircle
+  ChevronRight, 
+  ChevronDown, 
+  Code,
+  Sparkles,
+  Layers
 } from 'lucide-react';
 
 interface ExecutionStep {
@@ -35,7 +34,7 @@ export default function AskImpact() {
   const [messages, setMessages] = useState<Message[]>([
     { 
       role: 'assistant', 
-      content: 'Welcome to the Compliance Operating System terminal. Submit any goal or regulatory inquiry to initiate multi-agent reasoning.' 
+      content: 'Welcome to the RIO Compliance terminal. Submit any audit objective or regulatory inquiry to launch multi-agent coordination.' 
     }
   ]);
   const [input, setInput] = useState('');
@@ -43,11 +42,14 @@ export default function AskImpact() {
   const [activePlan, setActivePlan] = useState<any>(null);
   const [activeSteps, setActiveSteps] = useState<ExecutionStep[]>([]);
   const [activeMetrics, setActiveMetrics] = useState<{ time: number; tokens: number } | null>(null);
+  
+  // Expanded state for thinking traces inside messages
+  const [expandedSteps, setExpandedSteps] = useState<Record<number, boolean>>({});
 
   const suggestionPrompts = [
     "Identify compliance gaps for RBI Data Consent guidelines.",
     "Verify encryption policy alignment against FTC rules.",
-    "Draft a plain English executive report on recent MCA amendments."
+    "Compare SEC Cyber Disclosure rules against current draft."
   ];
 
   const handleSend = async (textToSend?: string) => {
@@ -57,12 +59,8 @@ export default function AskImpact() {
     setMessages(prev => [...prev, { role: 'user', content: query }]);
     setInput('');
     setIsLoading(true);
-    setActivePlan(null);
-    setActiveSteps([]);
-    setActiveMetrics(null);
-
+    
     try {
-      // Hit backend API planner executor
       const response = await fetch('/api/v1/planner/execute', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -86,7 +84,7 @@ export default function AskImpact() {
           tokens: data.tokens
         }]);
 
-        // Load into active side-panel metrics
+        // Auto load into right panel metrics
         setActivePlan(data.planner_decisions);
         setActiveSteps(data.steps);
         setActiveMetrics({ time: data.time_taken, tokens: data.tokens });
@@ -105,189 +103,226 @@ export default function AskImpact() {
     }
   };
 
-  return (
-    <div className="space-y-6 flex flex-col h-[calc(100vh-140px)]">
-      {/* Title */}
-      <div>
-        <h1 className="text-2xl font-display font-bold text-slate-100 mb-1">Ask RIO Compliance OS</h1>
-        <p className="text-xs text-slate-400">
-          Autonomous multi-agent execution workspace. Actions map directly to your compliance twin.
-        </p>
-      </div>
+  const toggleStepExpansion = (idx: number) => {
+    setExpandedSteps(prev => ({ ...prev, [idx]: !prev[idx] }));
+  };
 
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-4 gap-6 min-h-0">
-        {/* Chat message space (Left 3 columns) */}
-        <div className="lg:col-span-3 flex flex-col bg-slate-900/30 border border-slate-850 rounded-xl overflow-hidden justify-between">
-          <div className="flex-1 overflow-y-auto p-6 space-y-6">
-            {messages.map((msg, index) => (
-              <div 
-                key={index} 
-                onClick={() => {
-                  if (msg.role === 'assistant' && msg.steps) {
-                    setActivePlan(msg.planner_decisions);
-                    setActiveSteps(msg.steps);
-                    setActiveMetrics({ time: msg.time_taken || 0, tokens: msg.tokens || 0 });
-                  }
-                }}
-                className={`flex gap-4 items-start ${msg.role === 'user' ? 'justify-end' : 'cursor-pointer hover:bg-slate-950/20 rounded-lg p-2 transition-colors'}`}
-              >
-                {msg.role === 'assistant' && (
-                  <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center border border-indigo-500/20 shadow-md">
-                    <Bot className="w-4 h-4 text-indigo-100" />
+  return (
+    <div className="flex flex-col h-[calc(100vh-140px)] select-none">
+      
+      {/* Split Workspace Layout */}
+      <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-5 min-h-0">
+        
+        {/* Left Side: Chat Workspace (2 columns) */}
+        <div className="lg:col-span-2 flex flex-col bg-zinc-900/10 border border-zinc-900 rounded-lg overflow-hidden justify-between">
+          
+          {/* Messages Feed */}
+          <div className="flex-1 overflow-y-auto p-5 space-y-5">
+            {messages.map((msg, index) => {
+              const isUser = msg.role === 'user';
+              return (
+                <div 
+                  key={index}
+                  onClick={() => {
+                    if (msg.role === 'assistant' && msg.steps) {
+                      setActivePlan(msg.planner_decisions);
+                      setActiveSteps(msg.steps);
+                      setActiveMetrics({ time: msg.time_taken || 0, tokens: msg.tokens || 0 });
+                    }
+                  }}
+                  className={`flex gap-3 items-start ${isUser ? 'justify-end' : 'group cursor-pointer p-1.5 rounded-lg hover:bg-zinc-900/20 transition-colors'}`}
+                >
+                  {!isUser && (
+                    <div className="w-6 h-6 rounded bg-zinc-900 border border-zinc-800 flex items-center justify-center shrink-0">
+                      <Bot className="w-3.5 h-3.5 text-zinc-400" />
+                    </div>
+                  )}
+
+                  <div className={`p-4 rounded text-[11px] leading-relaxed max-w-xl space-y-3 ${
+                    isUser 
+                      ? 'bg-zinc-900/60 text-zinc-100 border border-zinc-800' 
+                      : 'bg-zinc-900/10 text-zinc-300 border border-zinc-900/60'
+                  }`}>
+                    <p className="whitespace-pre-wrap">{msg.content}</p>
+
+                    {/* Thinking steps trace container (Cursor-Style) */}
+                    {!isUser && msg.steps && (
+                      <div className="border-t border-zinc-900/80 pt-2.5">
+                        <div 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleStepExpansion(index);
+                          }}
+                          className="flex items-center gap-1.5 text-[9px] font-bold text-zinc-500 uppercase tracking-widest cursor-pointer hover:text-zinc-300 transition-colors"
+                        >
+                          {expandedSteps[index] ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+                          <span>Orchestration Chain steps</span>
+                          <span className="ml-auto text-[8px] bg-zinc-900 px-1.5 py-0.5 rounded border border-zinc-800 lowercase">
+                            {msg.steps.length} nodes
+                          </span>
+                        </div>
+
+                        {expandedSteps[index] && (
+                          <div className="mt-2.5 space-y-2 pl-3 border-l border-zinc-800">
+                            {msg.steps.map((step, idx) => (
+                              <div key={idx} className="space-y-1">
+                                <div className="flex items-center justify-between text-[9px]">
+                                  <span className="font-semibold text-zinc-400 font-mono">{step.agent}</span>
+                                  <span className="text-zinc-650">{step.duration}s</span>
+                                </div>
+                                <div className="flex flex-wrap gap-1">
+                                  {step.tools_called.map((tool) => (
+                                    <span key={tool} className="text-[8px] font-mono text-zinc-550 bg-zinc-950 px-1 py-0.5 rounded border border-zinc-900">
+                                      {tool}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
-                )}
-                
-                <div className={`p-4 rounded-xl max-w-2xl text-xs leading-relaxed ${
-                  msg.role === 'user'
-                    ? 'bg-indigo-600/20 text-indigo-100 border border-indigo-500/30'
-                    : 'bg-slate-950/60 text-slate-300 border border-slate-850'
-                }`}>
-                  <p className="whitespace-pre-wrap">{msg.content}</p>
-                  
-                  {msg.steps && (
-                    <div className="mt-3 flex gap-2 items-center text-[10px] text-slate-500 border-t border-slate-850 pt-2">
-                      <Clock className="w-3.5 h-3.5" />
-                      <span>Executed {msg.steps.length} agents in {msg.time_taken}s • click message to view trace</span>
+
+                  {isUser && (
+                    <div className="w-6 h-6 rounded bg-zinc-100 flex items-center justify-center shrink-0 shadow">
+                      <User className="w-3.5 h-3.5 text-zinc-950" />
                     </div>
                   )}
                 </div>
-
-                {msg.role === 'user' && (
-                  <div className="w-8 h-8 rounded-lg bg-slate-850 flex items-center justify-center border border-slate-700">
-                    <User className="w-4 h-4 text-slate-300" />
-                  </div>
-                )}
-              </div>
-            ))}
+              );
+            })}
 
             {isLoading && (
-              <div className="flex gap-4 items-start">
-                <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center">
-                  <Bot className="w-4 h-4 text-indigo-100" />
+              <div className="flex gap-3 items-start">
+                <div className="w-6 h-6 rounded bg-zinc-900 border border-zinc-800 flex items-center justify-center shrink-0">
+                  <Bot className="w-3.5 h-3.5 text-zinc-400" />
                 </div>
-                <div className="p-4 rounded-xl bg-slate-950/60 border border-slate-850 max-w-md">
-                  <div className="flex items-center gap-2 text-indigo-400 text-xs font-semibold">
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Planner orchestrating compliance chain...
+                <div className="p-4 rounded bg-zinc-900/10 border border-zinc-900 max-w-sm">
+                  <div className="flex items-center gap-2 text-zinc-450 text-[10.5px] font-semibold">
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    Planner executing compliance graph...
                   </div>
                 </div>
               </div>
             )}
           </div>
 
-          {/* Form input */}
-          <div className="p-4 border-t border-slate-850 bg-slate-950/20">
-            <div className="flex gap-3">
-              <input
-                type="text"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                placeholder="Submit goal e.g. Audit encryption policies against SEC rules..."
-                disabled={isLoading}
-                className="flex-1 bg-slate-950/60 border border-slate-850 rounded-xl py-3 px-4 text-xs text-slate-300 focus:outline-none focus:border-indigo-500/80 transition-colors"
-              />
-              <button
-                onClick={() => handleSend()}
-                disabled={isLoading}
-                className="px-4 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-semibold text-white shadow-lg shadow-indigo-600/20 flex items-center gap-2"
-              >
-                <Send className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* AI Observability Panel (Right column) */}
-        <div className="space-y-4 flex flex-col min-h-0 overflow-y-auto">
-          {/* Active Metrics */}
-          {activeMetrics && (
-            <div className="p-4 rounded-xl bg-slate-900/40 border border-slate-800/80 space-y-4">
-              <h3 className="text-xs font-bold text-slate-300 flex items-center gap-1.5 uppercase tracking-wider">
-                <Activity className="w-4 h-4 text-indigo-400" />
-                AI Observability
-              </h3>
-              
-              <div className="grid grid-cols-2 gap-2 text-center">
-                <div className="p-3 bg-slate-950/40 rounded-lg border border-slate-850">
-                  <span className="text-[10px] text-slate-500 block">Total Latency</span>
-                  <span className="text-sm font-bold text-slate-200">{activeMetrics.time}s</span>
-                </div>
-                <div className="p-3 bg-slate-950/40 rounded-lg border border-slate-850">
-                  <span className="text-[10px] text-slate-500 block">Tokens Used</span>
-                  <span className="text-sm font-bold text-slate-200">{activeMetrics.tokens}</span>
-                </div>
-              </div>
-
-              {activePlan && (
-                <div className="space-y-1.5">
-                  <span className="text-[9px] text-slate-500 uppercase font-semibold">Planner Decision Reasoning</span>
-                  <p className="text-[10px] text-slate-400 leading-relaxed bg-slate-950/40 p-2.5 rounded border border-slate-850 font-mono">
-                    {activePlan.reasoning}
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Node Execution graph */}
-          {activeSteps.length > 0 ? (
-            <div className="p-4 rounded-xl bg-slate-900/40 border border-slate-800/80 flex-1 space-y-3">
-              <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Agent Chain Node Trace</h4>
-              <div className="space-y-3 relative before:absolute before:left-4 before:top-2 before:bottom-2 before:w-[1px] before:bg-slate-800">
-                {activeSteps.map((step, idx) => (
-                  <div key={idx} className="flex gap-3 items-start relative pl-1">
-                    <div className="w-6 h-6 rounded-full bg-slate-950 border border-indigo-500/20 text-indigo-400 flex items-center justify-center text-[9px] font-bold z-10">
-                      {idx + 1}
-                    </div>
-                    <div className="flex-1 p-2 rounded bg-slate-950/50 border border-slate-850 text-[10px] space-y-1">
-                      <div className="flex justify-between items-center">
-                        <span className="font-semibold text-slate-200">{step.agent}</span>
-                        <span className="text-[8px] text-slate-500">{step.duration}s</span>
-                      </div>
-                      {step.tools_called.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          {step.tools_called.map((tool, ti) => (
-                            <span key={ti} className="text-[8px] px-1 bg-indigo-950 text-indigo-400 rounded border border-indigo-900/40">{tool}</span>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ) : (
-            <div className="p-6 rounded-xl bg-slate-900/20 border border-slate-900 text-center flex-1 flex flex-col justify-center items-center gap-2">
-              <HelpCircle className="w-8 h-8 text-slate-650" />
-              <p className="text-[10px] text-slate-500 max-w-[150px] leading-relaxed">
-                Submit queries to visualize planner routing and node latency.
-              </p>
-            </div>
-          )}
-
-          {/* Quick suggestions if idle */}
-          {!activeMetrics && (
-            <div className="p-4 rounded-xl bg-slate-900/40 border border-slate-800/80 space-y-3">
-              <h3 className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
-                <Zap className="w-3.5 h-3.5 text-indigo-400" />
-                Compliance Tasks
-              </h3>
-              <div className="space-y-2">
-                {suggestionPrompts.map((prompt, idx) => (
+          {/* Prompt input zone */}
+          <div className="p-4 border-t border-zinc-900/60 bg-[#08080a]">
+            {messages.length <= 1 && (
+              <div className="flex flex-wrap gap-1.5 justify-center mb-4 select-none">
+                {suggestionPrompts.map((prompt) => (
                   <button
-                    key={idx}
+                    key={prompt}
                     onClick={() => handleSend(prompt)}
-                    disabled={isLoading}
-                    className="w-full text-left p-3 rounded-lg bg-slate-950/60 border border-slate-850 text-[10px] text-slate-400 hover:text-slate-200 hover:border-slate-700/80 transition-all leading-relaxed"
+                    className="px-2.5 py-1.5 rounded bg-zinc-900/50 hover:bg-zinc-900 border border-zinc-850 text-[9.5px] text-zinc-400 hover:text-zinc-250 transition-colors text-left"
                   >
                     {prompt}
                   </button>
                 ))}
               </div>
+            )}
+
+            <div className="flex gap-2">
+              <input
+                type="text"
+                placeholder="Submit goal statement..."
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+                className="flex-1 bg-zinc-950 border border-zinc-850 rounded px-3.5 py-2 text-xs text-zinc-300 placeholder-zinc-550 focus:outline-none focus:border-zinc-750 transition-colors"
+              />
+              <button
+                onClick={() => handleSend()}
+                className="p-2 rounded bg-zinc-100 hover:bg-zinc-200 text-zinc-950 transition-colors flex items-center justify-center shadow"
+              >
+                <Send className="w-4 h-4" />
+              </button>
             </div>
-          )}
+          </div>
         </div>
+
+        {/* Right Side: Observability Artifacts panel (1 column) */}
+        <div className="p-5 rounded-lg bg-zinc-900/20 border border-zinc-900 shadow-sm flex flex-col justify-between overflow-y-auto">
+          <div className="space-y-5">
+            <h3 className="text-xs font-semibold text-zinc-200 flex items-center gap-2 pb-3 border-b border-zinc-900">
+              <Layers className="w-3.5 h-3.5 text-zinc-500" />
+              Observability Deck
+            </h3>
+
+            {!activeMetrics ? (
+              <div className="py-24 text-center select-none">
+                <p className="text-[10px] text-zinc-650">No trace loaded.</p>
+                <p className="text-[9px] text-zinc-600 mt-1 max-w-[180px] mx-auto leading-relaxed">
+                  Run a query statement to capture real-time agent metrics, latency, and tokens.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                
+                {/* Executive timings */}
+                <div className="p-3.5 rounded bg-zinc-950/40 border border-zinc-900 space-y-2">
+                  <span className="text-[8px] font-bold text-zinc-555 uppercase tracking-widest block">Timing & Resources</span>
+                  <div className="grid grid-cols-2 gap-2 text-[10px] font-semibold">
+                    <div>
+                      <p className="text-zinc-500">Latency</p>
+                      <p className="text-zinc-200 mt-0.5 flex items-center gap-1">
+                        <Clock className="w-3 h-3 text-zinc-400" />
+                        {activeMetrics.time}s
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-zinc-500">Tokens</p>
+                      <p className="text-zinc-200 mt-0.5 flex items-center gap-1">
+                        <Sparkles className="w-3 h-3 text-zinc-400" />
+                        {activeMetrics.tokens}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Plan Reasoning */}
+                {activePlan && (
+                  <div className="p-3.5 rounded bg-zinc-950/40 border border-zinc-900 space-y-2">
+                    <span className="text-[8px] font-bold text-zinc-555 uppercase tracking-widest block flex items-center gap-1">
+                      <Cpu className="w-3 h-3 text-zinc-500" />
+                      Plan reasoning
+                    </span>
+                    <p className="text-[10px] text-zinc-400 leading-relaxed font-mono">
+                      {activePlan.reasoning || "Analyzing regulatory vectors to derive steps."}
+                    </p>
+                  </div>
+                )}
+
+                {/* Allocated execution steps */}
+                {activeSteps.length > 0 && (
+                  <div className="space-y-2">
+                    <label className="text-[8px] font-bold text-zinc-555 uppercase tracking-widest block">Agent Execution Flow</label>
+                    <div className="space-y-2">
+                      {activeSteps.map((step, idx) => (
+                        <div key={idx} className="p-2.5 rounded bg-zinc-950 border border-zinc-850 flex items-center justify-between text-[10px]">
+                          <span className="font-semibold text-zinc-350">{step.agent}</span>
+                          <span className="px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-450 border border-emerald-500/20 font-bold text-[8.5px]">
+                            {step.status}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+              </div>
+            )}
+          </div>
+
+          <div className="mt-4 pt-4 border-t border-zinc-900 flex justify-between text-[9px] text-zinc-650 font-bold uppercase tracking-widest">
+            <span>Orchestrator Sandbox</span>
+            <span>RIO Core v2.0</span>
+          </div>
+        </div>
+
       </div>
     </div>
   );
