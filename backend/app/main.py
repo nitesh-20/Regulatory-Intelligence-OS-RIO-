@@ -10,6 +10,7 @@ from app.api.endpoints import router as api_router
 from app.api.planner import router as planner_router
 from app.api.documents import router as documents_router
 from app.api.monitoring import router as monitoring_router
+from app.api.reports import router as reports_router
 
 app = FastAPI(
     title="RIO (Regulatory Intelligence Operating System) API",
@@ -31,6 +32,7 @@ app.include_router(api_router, prefix="/api/v1")
 app.include_router(planner_router, prefix="/api/v1/planner", tags=["Planner"])
 app.include_router(documents_router, prefix="/api/v1/documents", tags=["Documents"])
 app.include_router(monitoring_router, prefix="/api/v1/monitoring", tags=["Monitoring"])
+app.include_router(reports_router, prefix="/api/v1/reports", tags=["Reports"])
 
 @app.get("/")
 async def root():

@@ -117,6 +117,26 @@ class PlannerAgent(BaseAgent):
         state["time_taken"] = round(duration, 3)
         state["tokens"] = sum(step["tokens_used"] for step in state["steps"]) + 150
         
+        # Save run log to database if db session is present
+        db = state.get("db")
+        org_id = state.get("organization_id")
+        if db and org_id:
+            try:
+                from app.database.models import AgentRun
+                run_record = AgentRun(
+                    organization_id=org_id,
+                    agent_name="PlannerAgent",
+                    run_status="completed",
+                    execution_steps=state["steps"],
+                    tokens_consumed=state["tokens"]
+                )
+                db.add(run_record)
+                db.commit()
+                print(f"[PlannerAgent] Saved execution logs to database.")
+            except Exception as e:
+                db.rollback()
+                print(f"[PlannerAgent] Error saving run log to database: {e}")
+        
         # Construct final response
         summary_text = state.get("summary", "Analysis completed successfully.")
         gaps_count = len(state.get("gaps_found", []))

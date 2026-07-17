@@ -1,55 +1,92 @@
 import time
-from fastapi import APIRouter, UploadFile, File, Form, HTTPException
+from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Depends
 from pydantic import BaseModel
 from typing import Dict, Any, List
+from sqlalchemy.orm import Session
 import sys
 import os
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..")))
 from agents import get_agent_instance
+from app.database.connection import get_db
+from app.database.models import Organization, Policy
+from app.core.rag import index_policy
 
 router = APIRouter()
 
-# Global memory simulation store for uploaded documents
-MOCK_INDEXED_POLICIES = [
-    {"name": "Corporate Privacy Policy v1.4.pdf", "size": "2.4 MB", "uploaded": "2 days ago", "status": "SYNCHRONIZED", "chunks": 142},
-    {"name": "Database & Data Security controls.md", "size": "18 KB", "uploaded": "3 days ago", "status": "SYNCHRONIZED", "chunks": 24}
-]
-
 @router.get("/")
-async def get_documents():
-    return MOCK_INDEXED_POLICIES
+async def get_documents(db: Session = Depends(get_db)):
+    try:
+        policies = db.query(Policy).all()
+        results = []
+        for p in policies:
+            # Format realistic sizes and chunk estimations
+            size_kb = max(1, len(p.content) // 1024)
+            chunks = max(1, len(p.content) // 500)
+            results.append({
+                "id": p.id,
+                "name": p.title,
+                "size": f"{size_kb} KB",
+                "uploaded": "Activated via Seed" if p.version_tag == "1.4.0" or p.version_tag == "1.0.0" else "Just now",
+                "status": "SYNCHRONIZED",
+                "chunks": chunks
+            })
+        return results
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
 @router.post("/upload")
 async def upload_document(
     file: UploadFile = File(...),
-    category: str = Form("General")
+    category: str = Form("General"),
+    db: Session = Depends(get_db)
 ):
     doc_agent = get_agent_instance("document_agent")
     if not doc_agent:
         raise HTTPException(status_code=500, detail="DocumentAgent not available.")
         
     try:
-        # Run document parsing pipeline
-        state = {"document_path": file.filename}
+        org = db.query(Organization).first()
+        if not org:
+            raise HTTPException(status_code=500, detail="Organization not seeded.")
+
+        # Read actual bytes from upload stream
+        file_bytes = await file.read()
+        
+        # Run document agent parsing and DB save
+        state = {
+            "file_content": file_bytes,
+            "file_name": file.filename,
+            "organization_id": org.id,
+            "db": db
+        }
         result = doc_agent.process(state)
         
-        # Append to memory database
+        policy_id = result.get("policy_id")
+        policy_title = result.get("policy_title", file.filename)
+        cleaned_markdown = result.get("cleaned_markdown", "")
+        
+        # Add to RAG vector database indexing
+        if policy_id and cleaned_markdown:
+            index_policy(policy_id, policy_title, cleaned_markdown)
+
         new_doc = {
-            "name": file.filename,
-            "size": f"{round(file.size / 1024, 1)} KB" if file.size else "150 KB",
+            "id": policy_id,
+            "name": policy_title,
+            "size": f"{round(len(file_bytes) / 1024, 1)} KB",
             "uploaded": "Just now",
             "status": "SYNCHRONIZED",
-            "chunks": 42
+            "chunks": max(1, len(cleaned_markdown) // 500)
         }
-        MOCK_INDEXED_POLICIES.append(new_doc)
         
         return {
             "status": "success",
             "document": new_doc,
             "entities": result.get("extracted_entities", []),
             "metadata": result.get("metadata", {}),
-            "markdown": result.get("cleaned_markdown", "")
+            "markdown": cleaned_markdown
         }
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Parsing error: {str(e)}")

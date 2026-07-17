@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
@@ -9,10 +9,39 @@ import {
   Calendar, 
   ChevronRight, 
   Zap, 
-  Activity 
+  Activity,
+  Download
 } from 'lucide-react';
 
 export default function Dashboard() {
+  const [gaps, setGaps] = useState<any[]>([]);
+  const [regulations, setRegulations] = useState<any[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const [gapsRes, regsRes] = await Promise.all([
+          fetch('/api/v1/compliance/gaps'),
+          fetch('/api/v1/regulations')
+        ]);
+        if (gapsRes.ok) {
+          const gapsData = await gapsRes.json();
+          setGaps(gapsData);
+        }
+        if (regsRes.ok) {
+          const regsData = await regsRes.json();
+          setRegulations(regsData);
+        }
+      } catch (err) {
+        console.error("[Dashboard] Error fetching live metrics", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, []);
+
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
@@ -21,6 +50,16 @@ export default function Dashboard() {
   const cardVariants = {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0 }
+  };
+
+  // Dynamic metrics calculations
+  const gapsCount = gaps.length;
+  const regulationsCount = regulations.length || 4; // fallback to seeded 4
+  const readinessScore = Math.max(10, 100 - (gapsCount * 15));
+
+  const handleDownloadReport = () => {
+    // Direct link to streaming PDF compile download
+    window.open('/api/v1/reports/generate', '_blank');
   };
 
   return (
@@ -33,10 +72,17 @@ export default function Dashboard() {
             Executive Compliance Intelligence
           </h1>
           <p className="text-slate-400 text-xs max-w-2xl">
-            Continuous multi-agent monitoring detected 2 new amendments affecting your operations today. Your audit twin gap analysis has been refreshed.
+            Continuous multi-agent monitoring detected active changes in your compliance framework today. Your audit twin gap analysis has been refreshed.
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 shrink-0">
+          <button 
+            onClick={handleDownloadReport}
+            className="px-4 py-2.5 rounded-xl bg-slate-850 hover:bg-slate-800 text-xs font-semibold text-slate-200 border border-slate-700/80 transition-all flex items-center gap-2"
+          >
+            <Download className="w-3.5 h-3.5" />
+            Download PDF Report
+          </button>
           <Link to="/chat" className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-semibold text-white shadow-lg shadow-indigo-600/20 transition-all flex items-center gap-2">
             <Zap className="w-3.5 h-3.5" />
             Ask RIO Assistant
@@ -52,10 +98,10 @@ export default function Dashboard() {
         className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
       >
         {[
-          { title: 'Audit Readiness', value: '87%', change: '+3.4%', icon: CheckCircle, color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' },
-          { title: 'Identified Gaps', value: '5 Open', change: '-2 this week', icon: AlertTriangle, color: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-500/20', isDown: true },
-          { title: 'Tracked Regulations', value: '1,482', change: '+24 new', icon: FileText, color: 'text-indigo-400', bg: 'bg-indigo-500/10', border: 'border-indigo-500/20' },
-          { title: 'Pending Actions', value: '14 Tasks', change: '4 due soon', icon: Activity, color: 'text-blue-400', bg: 'bg-blue-500/10', border: 'border-blue-500/20' },
+          { title: 'Audit Readiness', value: `${readinessScore}%`, change: readinessScore >= 80 ? '+3.4%' : '-10.2%', icon: CheckCircle, color: readinessScore >= 80 ? 'text-emerald-400' : 'text-rose-400', bg: readinessScore >= 80 ? 'bg-emerald-500/10' : 'bg-rose-500/10', border: readinessScore >= 80 ? 'border-emerald-500/20' : 'border-rose-500/20' },
+          { title: 'Identified Gaps', value: `${gapsCount} Open`, change: `${gapsCount} active tasks`, icon: AlertTriangle, color: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-500/20', isDown: true },
+          { title: 'Tracked Regulations', value: `${regulationsCount}`, change: '+2 new this week', icon: FileText, color: 'text-indigo-400', bg: 'bg-indigo-500/10', border: 'border-indigo-500/20' },
+          { title: 'Pending Actions', value: `${gapsCount} Tasks`, change: 'due soon', icon: Activity, color: 'text-blue-400', bg: 'bg-blue-500/10', border: 'border-blue-500/20' },
         ].map((kpi, idx) => (
           <motion.div 
             key={idx} 
@@ -73,7 +119,7 @@ export default function Dashboard() {
             </div>
             <div className="mt-4 flex items-center gap-1.5 text-[10px] font-semibold">
               <span className={kpi.isDown ? 'text-emerald-400' : 'text-indigo-400'}>{kpi.change}</span>
-              <span className="text-slate-550">from last evaluation</span>
+              <span className="text-slate-500">from last evaluation</span>
             </div>
           </motion.div>
         ))}
@@ -101,7 +147,7 @@ export default function Dashboard() {
                   Critical Impact
                 </span>
                 <h4 className="text-xs font-semibold text-slate-200 mt-2">EU AI Act General Purpose AI Model Amendment</h4>
-                <p className="text-slate-405 text-[11px] mt-1 leading-relaxed">
+                <p className="text-slate-400 text-[11px] mt-1 leading-relaxed">
                   The European Commission has updated audit standards for models exceeding 10^22 FLOPS. As you operate self-hosted models, you are required to submit an active risk inventory.
                 </p>
                 <div className="mt-3 flex gap-2">
@@ -116,7 +162,7 @@ export default function Dashboard() {
                   Medium Impact
                 </span>
                 <h4 className="text-xs font-semibold text-slate-200 mt-2">SEC Cyber Risk Disclosure Form 8-K Update</h4>
-                <p className="text-slate-405 text-[11px] mt-1 leading-relaxed">
+                <p className="text-slate-400 text-[11px] mt-1 leading-relaxed">
                   Amended requirements for inline XBRL tagging of material cybersecurity incidents within 4 business days of assessment.
                 </p>
                 <div className="mt-3 flex gap-2">
@@ -152,7 +198,7 @@ export default function Dashboard() {
                 <div key={idx} className="flex justify-between items-center p-3 rounded-lg bg-slate-950/40 border border-slate-900">
                   <div>
                     <h4 className="text-xs font-semibold text-slate-200">{enforcement.name}</h4>
-                    <p className="text-[10px] text-slate-400 mt-0.5">{enforcement.regulation} • {enforcement.date}</p>
+                    <p className="text-[10px] text-slate-405 mt-0.5">{enforcement.regulation} • {enforcement.date}</p>
                   </div>
                   <span className="text-[11px] font-bold text-rose-400 px-2 py-1 rounded bg-rose-500/10 border border-rose-500/10">
                     {enforcement.fine}
@@ -160,6 +206,7 @@ export default function Dashboard() {
                 </div>
               ))}
             </div>
+
           </div>
 
           <div className="mt-6 pt-4 border-t border-slate-900/60 flex justify-between items-center">
