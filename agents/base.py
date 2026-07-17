@@ -50,7 +50,7 @@ class BaseAgent:
             }
         ]
 
-    def call_llm(self, prompt: str, system_instruction: str = None) -> str:
+    def call_llm(self, prompt: str, system_instruction: str = None, tools: List[Any] = None) -> str:
         """
         Helper to call Gemini. Falls back to generating mock content if API key is mock/missing.
         """
@@ -73,10 +73,14 @@ class BaseAgent:
             return f"[Mock LLM Response for {self.name}] Synthesized response based on prompt: {prompt[:100]}..."
             
         try:
+            config = {'system_instruction': instruction}
+            if tools:
+                config['tools'] = tools
+                
             response = self.client.models.generate_content(
                 model='gemini-2.5-flash',
                 contents=prompt,
-                config={'system_instruction': instruction}
+                config=config
             )
             return response.text
         except APIError as e:

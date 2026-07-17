@@ -122,6 +122,7 @@ class PlannerAgent(BaseAgent):
         org_id = state.get("organization_id")
         if db and org_id:
             try:
+                # pyrefly: ignore [missing-import]
                 from app.database.models import AgentRun
                 run_record = AgentRun(
                     organization_id=org_id,
