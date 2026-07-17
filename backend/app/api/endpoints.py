@@ -44,7 +44,6 @@ async def get_regulations(db: Session = Depends(get_db)):
     regs = db.query(Regulation).all()
     results = []
     for r in regs:
-        # Check active severity in DB
         results.append({
             "id": r.id,
             "title": r.title,
@@ -52,8 +51,8 @@ async def get_regulations(db: Session = Depends(get_db)):
             "country_code": r.country_code,
             "category": r.category,
             "source_url": r.source_url,
-            "severity": "HIGH" if "DPDP" in r.title or "FTC" in r.title else "MEDIUM",
-            "summary": f"Autonomous regulatory intelligence document fetched from {r.authority}."
+            "severity": r.severity or "MEDIUM",
+            "summary": r.summary or "No summary available."
         })
     return results
 
@@ -77,8 +76,8 @@ async def create_regulation(reg: RegulationCreate, db: Session = Depends(get_db)
             "country_code": new_reg.country_code,
             "category": new_reg.category,
             "source_url": new_reg.source_url,
-            "severity": "MEDIUM",
-            "summary": "Custom regulation record registered."
+            "severity": new_reg.severity or "MEDIUM",
+            "summary": new_reg.summary or "Custom regulation record registered."
         }
     except Exception as e:
         db.rollback()
@@ -146,23 +145,9 @@ async def get_compliance_gaps(db: Session = Depends(get_db)):
             ComplianceTask.status == "open"
         ).all()
         
-        # Fallback to state gaps if DB is empty
+        # Fallback to empty if DB is empty, no more mocking
         if not tasks:
-            gaps = result.get("gaps_found", [])
-            response_gaps = []
-            for g in gaps:
-                response_gaps.append(
-                    ComplianceGapResponse(
-                        id=g["id"],
-                        regulation_id="2",
-                        policy_id="p2",
-                        gap_description=g["gap_details"],
-                        severity=g["severity"],
-                        status=g["status"],
-                        remediation_plan=g["remediation_plan"]
-                    )
-                )
-            return response_gaps
+            return []
             
         response_gaps = []
         for t in tasks:

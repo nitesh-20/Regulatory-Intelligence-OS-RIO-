@@ -60,6 +60,8 @@ class Regulation(Base):
     country_code = Column(String(10), nullable=False)
     category = Column(String(100), nullable=False)
     source_url = Column(Text, nullable=False)
+    summary = Column(Text, nullable=True)
+    severity = Column(String(20), nullable=True, default="MEDIUM")
     created_at = Column(DateTime(timezone=True), default=datetime.datetime.utcnow)
     updated_at = Column(DateTime(timezone=True), default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
 
