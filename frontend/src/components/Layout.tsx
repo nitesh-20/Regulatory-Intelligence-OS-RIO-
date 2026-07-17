@@ -174,7 +174,7 @@ export default function Layout() {
 
         {/* Content Wrapper */}
         <main className="flex-1 overflow-y-auto bg-[#08080a] p-8 relative glow-spotlight">
-          <div className="max-w-5xl mx-auto">
+          <div className="max-w-[1600px] w-full mx-auto">
             <Outlet />
           </div>
         </main>
