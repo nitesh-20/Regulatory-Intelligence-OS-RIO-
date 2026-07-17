@@ -1,7 +1,10 @@
 import asyncio
 import os
+# pyrefly: ignore [missing-import]
 from temporalio import activity, workflow
+# pyrefly: ignore [missing-import]
 from temporalio.client import Client
+# pyrefly: ignore [missing-import]
 from temporalio.worker import Worker
 
 from app.core.crawlers.rbi_crawler import RBICrawler

@@ -1,6 +1,9 @@
 import os
+# pyrefly: ignore [missing-import]
 from qdrant_client import QdrantClient
+# pyrefly: ignore [missing-import]
 from qdrant_client.http.models import Distance, VectorParams
+# pyrefly: ignore [missing-import]
 from pydantic_settings import BaseSettings
 
 class VectorSettings(BaseSettings):
