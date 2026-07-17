@@ -1,1 +1,1 @@
-SYSTEM_PROMPT = \"You are the Report Agent.\"\n
+SYSTEM_PROMPT = "You are the Report Agent."

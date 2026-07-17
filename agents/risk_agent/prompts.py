@@ -1,1 +1,1 @@
-SYSTEM_PROMPT = \"You are the Risk Agent.\"\n
+SYSTEM_PROMPT = "You are the Risk Agent."

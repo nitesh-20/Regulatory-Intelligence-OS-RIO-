@@ -1,1 +1,2 @@
-def get_tools():\n    return []\n
+def get_tools():
+    return []

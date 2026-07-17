@@ -1,1 +1,1 @@
-SYSTEM_PROMPT = \"You are the Document Agent.\"\n
+SYSTEM_PROMPT = "You are the Document Agent."

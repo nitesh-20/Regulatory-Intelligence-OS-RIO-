@@ -1,1 +1,1 @@
-SYSTEM_PROMPT = \"You are the Comparison Agent.\"\n
+SYSTEM_PROMPT = "You are the Comparison Agent."

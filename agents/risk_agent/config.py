@@ -1,1 +1,2 @@
-MODEL_NAME = 'gemini-2.5-flash'\nTIMEOUT = 60\n
+MODEL_NAME = 'gemini-2.5-flash'
+TIMEOUT = 60

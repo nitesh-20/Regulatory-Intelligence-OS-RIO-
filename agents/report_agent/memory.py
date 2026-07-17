@@ -1,1 +1,3 @@
-class AgentMemory:\n    def __init__(self):\n        self.context = {}\n
+class AgentMemory:
+    def __init__(self):
+        self.context = {}

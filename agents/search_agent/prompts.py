@@ -1,1 +1,1 @@
-SYSTEM_PROMPT = \"You are the Search Agent.\"\n
+SYSTEM_PROMPT = "You are the Search Agent."
