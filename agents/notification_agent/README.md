@@ -1,0 +1,1 @@
+# Notification Agent\n\nOrchestrates Slack webhooks, email relays, and Discord alerts.\n

@@ -1,0 +1,1 @@
+# Report Agent\n\nBuilds executive summaries, PDF structures, and slide briefings.\n

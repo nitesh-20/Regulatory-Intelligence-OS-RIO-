@@ -1,14 +1,11 @@
-import React, { useState } from 'react'
+import React, { useState } from 'react';
 import { 
-  Filter, 
   Search, 
   MapPin, 
-  Building2, 
   ArrowUpRight, 
-  FileText, 
   Clock, 
   ExternalLink 
-} from 'lucide-react'
+} from 'lucide-react';
 
 const initialFeed = [
   { id: '1', title: 'DPDP Data Consent Architecture Framework', authority: 'RBI / MEITY', category: 'Privacy', country: 'IN', date: '2026-06-21', severity: 'HIGH', summary: 'Framework laying down operational parameters for consent managers handling digital personal data.' },
@@ -16,20 +13,20 @@ const initialFeed = [
   { id: '3', title: 'EU AI Act Risk Management Standard (Draft)', authority: 'EU Parliament', category: 'Artificial Intelligence', country: 'EU', date: '2026-06-19', severity: 'HIGH', summary: 'Technical parameters detailing self-audit records for foundational model developers.' },
   { id: '4', title: 'Digital operational resilience act (DORA)', authority: 'EIOPA', category: 'Financial', country: 'EU', date: '2026-06-18', severity: 'MEDIUM', summary: 'Updated technical standards for third-party risk management in banking infrastructures.' },
   { id: '5', title: 'SEC Cybersecurity Risk Management and Governance', authority: 'SEC', category: 'Cybersecurity', country: 'US', date: '2026-06-15', severity: 'HIGH', summary: 'Revised guidance on executive team risk monitoring methodologies and inline audit tags.' }
-]
+];
 
 export default function Feed() {
-  const [filter, setFilter] = useState('All')
-  const [search, setSearch] = useState('')
+  const [filter, setFilter] = useState('All');
+  const [search, setSearch] = useState('');
 
-  const categories = ['All', 'Privacy', 'Cybersecurity', 'Artificial Intelligence', 'Financial']
+  const categories = ['All', 'Privacy', 'Cybersecurity', 'Artificial Intelligence', 'Financial'];
 
   const filteredFeed = initialFeed.filter(item => {
-    const matchesFilter = filter === 'All' || item.category === filter
+    const matchesFilter = filter === 'All' || item.category === filter;
     const matchesSearch = item.title.toLowerCase().includes(search.toLowerCase()) || 
-                          item.authority.toLowerCase().includes(search.toLowerCase())
-    return matchesFilter && matchesSearch
-  })
+                          item.authority.toLowerCase().includes(search.toLowerCase());
+    return matchesFilter && matchesSearch;
+  });
 
   return (
     <div className="space-y-6">
@@ -59,7 +56,7 @@ export default function Feed() {
             <button
               key={cat}
               onClick={() => setFilter(cat)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                 filter === cat
                   ? 'bg-indigo-600/30 text-indigo-400 border border-indigo-500/30'
                   : 'bg-slate-950/40 text-slate-400 border border-slate-850 hover:bg-slate-900/50 hover:text-slate-200'
@@ -81,7 +78,7 @@ export default function Feed() {
             <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
               <div className="space-y-2">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${
+                  <span className={`text-[9px] font-bold px-2 py-0.5 rounded ${
                     item.severity === 'CRITICAL' 
                       ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20' 
                       : item.severity === 'HIGH' 
@@ -91,17 +88,17 @@ export default function Feed() {
                     {item.severity}
                   </span>
                   <span className="text-[10px] text-slate-500">•</span>
-                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">
+                  <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-slate-800 text-slate-355 border border-slate-700">
                     {item.category}
                   </span>
                   <span className="text-[10px] text-slate-500">•</span>
-                  <span className="text-[10px] font-medium text-slate-400 flex items-center gap-1">
-                    <MapPin className="w-3 h-3 text-slate-500" />
+                  <span className="text-[10px] font-semibold text-slate-450 flex items-center gap-1">
+                    <MapPin className="w-3.5 h-3.5 text-slate-500" />
                     {item.country}
                   </span>
                 </div>
 
-                <h3 className="text-sm font-semibold text-slate-200 group-hover:text-indigo-400 transition-colors">
+                <h3 className="text-sm font-bold text-slate-200 group-hover:text-indigo-400 transition-colors">
                   {item.title}
                 </h3>
                 <p className="text-[11px] text-slate-400 leading-relaxed max-w-4xl">
@@ -110,14 +107,14 @@ export default function Feed() {
               </div>
 
               <div className="flex flex-col items-end justify-between min-w-[120px] text-right">
-                <span className="text-[10px] text-slate-500 flex items-center gap-1">
-                  <Clock className="w-3 h-3" />
+                <span className="text-[9px] text-slate-500 flex items-center gap-1 font-semibold">
+                  <Clock className="w-3.5 h-3.5" />
                   {item.date}
                 </span>
-                <span className="text-[10px] text-slate-400 font-medium mt-1">
+                <span className="text-[10px] text-slate-400 font-semibold mt-1">
                   {item.authority}
                 </span>
-                <button className="mt-3 text-[10px] text-indigo-400 font-semibold flex items-center gap-1 bg-indigo-950/20 hover:bg-indigo-950/50 px-2.5 py-1 rounded border border-indigo-900/40 transition-colors">
+                <button className="mt-3 text-[9px] text-indigo-400 font-bold flex items-center gap-1 bg-indigo-950/20 hover:bg-indigo-950/50 px-2.5 py-1 rounded border border-indigo-900/40 transition-colors">
                   Analyze Impact
                   <ExternalLink className="w-3 h-3" />
                 </button>
@@ -133,5 +130,5 @@ export default function Feed() {
         )}
       </div>
     </div>
-  )
+  );
 }

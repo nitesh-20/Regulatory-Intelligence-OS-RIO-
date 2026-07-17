@@ -1,6 +1,8 @@
-# RIO Agent (Regulatory Intelligence Operating System)
+# RIO (Regulatory Intelligence Operating System)
 
-RIO Agent is an enterprise-grade Agentic Regulatory Intelligence Platform. It monitors global regulatory bodies, parses documents, reasons through compliance twin policies, runs audit simulations, and triggers automated workflows (Jira, Slack, Linear) using a resilient multi-agent network.
+> **"The AI Operating System for Regulatory Intelligence and Compliance."**
+
+RIO is an enterprise-grade agentic regulatory intelligence platform. It autonomously monitors global regulatory bodies, deconstructs circulars, parses policies, flags compliance gaps, and runs audit simulations using a resilient multi-agent network.
 
 ---
 
@@ -8,93 +10,80 @@ RIO Agent is an enterprise-grade Agentic Regulatory Intelligence Platform. It mo
 
 ```
 rio-agent/
-├── frontend/             # React (Vite) + Tailwind CSS SPA Client
-├── backend/              # FastAPI python backend API
-├── agents/               # LangGraph multi-agent logic stubs (Shared)
-├── workflows/            # Temporal background workflow stubs (Shared)
-├── database/             # PostgreSQL schema DDL files
-├── docs/                 # Architectural and Agent specifications
-├── docker-compose.yml    # Development stack orchestration config
-├── package.json          # Root npm script workspace mapping
-└── README.md             # Startup and connection guidelines
+├── frontend/             # React (Vite) + TypeScript + Tailwind CSS Client
+├── backend/              # FastAPI Python Gateway
+├── agents/               # Autonomous AI agent sub-packages (Shared Core)
+│   ├── base.py           # Core BaseAgent class with google-genai
+│   ├── planner_agent/    # Orchestrator & sequence builder
+│   ├── search_agent/     # Web search & registry scraper
+│   ├── compliance_agent/ # Twin policy gap mapper
+│   ├── risk_agent/       # Criticality & exposure scorer
+│   ├── document_agent/   # OCR & obligation extractor
+│   ├── comparison_agent/ # Document version diff comparator
+│   └── ...
+├── database/             # PostgreSQL DDL schemas
+├── docs/                 # Architectural specifications
+└── docker-compose.yml    # Development stack orchestration config
 ```
 
 ---
 
-## 2. Quickstart & Local Setup
+## 2. Multi-Agent Reasoning Architecture
+
+Unlike simple CRUD apps, every action in RIO is evaluated by a collaborative chain of autonomous specialists:
+
+```
+                  [User Inquiry]
+                        │
+                        ▼
+                [Planner Agent] (Brain)
+                        │
+         ┌──────────────┼──────────────┐
+         ▼              ▼              ▼
+  [Search Agent] [Document Agent] [Risk Agent]
+         │              │              │
+         └──────────────┼──────────────┘
+                        ▼
+            [Compliance Twin Agent]
+                        │
+                        ▼
+               [Qdrant Vector DB]
+```
+
+---
+
+## 3. Quickstart & Local Setup
 
 ### System Prerequisites
 * Node.js v18+
 * Python v3.11+
-* Docker & Docker Compose
 
 ### Step 1: Clone and Bootstrap Environment
 ```bash
-# Clone the repository
 git clone https://github.com/nitesh-20/Regulatory-Intelligence-OS-RIO-.git
 cd Regulatory-Intelligence-OS-RIO-
-
-# Set up local environment variables
 cp .env.example .env
 ```
-Open `.env` and fill in your connection strings and API keys.
+Open `.env` and fill in your `GEMINI_API_KEY`.
 
 ### Step 2: Bootstrap Dependencies
-You can install both the frontend node modules and backend pip packages using the root npm workspace command:
+Install the frontend node modules and backend pip packages using the monorepo script:
 ```bash
 npm run bootstrap
 ```
 
 ### Step 3: Run the Development Servers
-Launch both the React dev frontend (port 3000) and the FastAPI reload api server (port 8000) concurrently:
+Launch both the React dev frontend and the FastAPI reload api server concurrently:
 ```bash
 npm run dev:all
 ```
+The terminal console will load at **`http://localhost:3001`**.
 
 ---
 
-## 3. Database & Authentication Setup
+## 4. Documentation Catalog
 
-### PostgreSQL Setup
-1.  Launch the PostgreSQL service container:
-    ```bash
-    docker-compose up -d postgres
-    ```
-2.  Initialize the schemas using the DDL script:
-    ```bash
-    psql -h localhost -U rio_user -d rio_db -f database/schema.sql
-    ```
-    *(Password defaults to `rio_password` as defined in `docker-compose.yml`)*
-
-### Qdrant Vector DB Setup
-1.  Launch the Qdrant database:
-    ```bash
-    docker-compose up -d qdrant
-    ```
-2.  Qdrant dashboards can be accessed at `http://localhost:6333/dashboard`.
-3.  Vector embeddings of regulations can be pushed to collections via `qdrant-client` using the keys defined in the Python database modules.
-
-### Clerk Authentication Configuration
-1.  Register an account at [Clerk.com](https://clerk.com).
-2.  Create a new application named `RIO Agent`.
-3.  Copy the publishable and secret keys from the API keys section.
-4.  Paste them into the `.env` settings parameters:
-    ```env
-    CLERK_PUBLISHABLE_KEY=pk_test_...
-    CLERK_SECRET_KEY=sk_test_...
-    ```
-
----
-
-## 4. GitHub Deployment Guidelines
-
-To push this codebase to a new GitHub repository:
-
-```bash
-git init
-git add .
-git commit -m "Initial scaffold of RIO Agent platform architecture"
-git branch -M main
-git remote add origin https://github.com/nitesh-20/Regulatory-Intelligence-OS-RIO-.git
-git push -u origin main
-```
+For in-depth architectural and agent design, consult our documentation sub-folder:
+*   [SystemDesign.md](file:///Users/niteshsahu/Desktop/RIO%20Agent/docs/SystemDesign.md): Sequence flows and Mermaid charts.
+*   [AI-Agents.md](file:///Users/niteshsahu/Desktop/RIO%20Agent/docs/AI-Agents.md): Detailed configurations for the multi-agent mesh.
+*   [RAG.md](file:///Users/niteshsahu/Desktop/RIO%20Agent/docs/RAG.md): Vector chunking standards and self-correcting retrieval protocols.

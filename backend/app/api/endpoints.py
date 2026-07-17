@@ -1,10 +1,16 @@
 from fastapi import APIRouter, HTTPException, Depends
 from typing import List, Dict, Any
+from pydantic import BaseModel
 from app.schemas.schemas import RegulationCreate, RegulationResponse, WatchlistCreate, ComplianceGapResponse
+import sys
+import os
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..")))
+from agents import get_agent_instance
 
 router = APIRouter()
 
-# In-memory storage mock for startup scaffolding
+# In-memory storage mock for regulations and watchlists
 MOCK_REGULATIONS = [
     {
         "id": "1",
@@ -38,26 +44,22 @@ MOCK_WATCHLISTS = [
     }
 ]
 
-MOCK_GAPS = [
-    {
-        "id": "g1",
-        "regulation_id": "2",
-        "policy_id": "p2",
-        "gap_description": "Database Encryption Key Strength: Policy mandates AES-128, SEC Rule 12 requires AES-256.",
-        "severity": "CRITICAL",
-        "status": "OPEN",
-        "remediation_plan": "Migrate database clusters and configuration credentials to use AES-256 keys."
-    }
-]
+class CompareRequest(BaseModel):
+    old_text: str
+    new_text: str
 
 # --- Health check ---
 @router.get("/health", tags=["System"])
 async def health_check():
+    # Perform quick checks to verify agent pipeline connectivity
+    planner = get_agent_instance("planner_agent")
+    agent_status = "connected" if planner is not None else "disconnected"
     return {
         "status": "healthy",
         "database": "connected",
         "vector_store": "connected",
-        "cache": "connected"
+        "cache": "connected",
+        "agent_system": agent_status
     }
 
 # --- Regulations Catalog ---
@@ -97,7 +99,49 @@ async def create_watchlist(watchlist: WatchlistCreate):
     MOCK_WATCHLISTS.append(new_wl)
     return new_wl
 
-# --- Compliance Twin & Gaps ---
+# --- Compliance Twin Gaps ---
 @router.get("/compliance/gaps", response_model=List[ComplianceGapResponse], tags=["Compliance Twin"])
 async def get_compliance_gaps():
-    return MOCK_GAPS
+    comp_agent = get_agent_instance("compliance_agent")
+    if not comp_agent:
+        raise HTTPException(status_code=500, detail="ComplianceAgent not available.")
+        
+    try:
+        state = {}
+        result = comp_agent.process(state)
+        gaps = result.get("gaps_found", [])
+        
+        # Map state gaps to schema
+        response_gaps = []
+        for g in gaps:
+            response_gaps.append(
+                ComplianceGapResponse(
+                    id=g["id"],
+                    regulation_id="2",
+                    policy_id="p2",
+                    gap_description=g["gap_details"],
+                    severity=g["severity"],
+                    status=g["status"],
+                    remediation_plan=g["remediation_plan"]
+                )
+            )
+        return response_gaps
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# --- Document Version Comparison ---
+@router.post("/comparison/compare", tags=["Comparison"])
+async def compare_documents(req: CompareRequest):
+    comp_agent = get_agent_instance("comparison_agent")
+    if not comp_agent:
+        raise HTTPException(status_code=500, detail="ComparisonAgent not available.")
+        
+    try:
+        state = {"old_text": req.old_text, "new_text": req.new_text}
+        result = comp_agent.process(state)
+        return {
+            "status": "success",
+            "diff_results": result.get("diff_results", {})
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

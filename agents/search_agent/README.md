@@ -1,0 +1,1 @@
+# Search Agent\n\nExecutes external search queries and parses official circular registries.\n

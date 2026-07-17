@@ -1,17 +1,17 @@
-import React, { useState } from 'react'
-import { Upload, Shield, AlertCircle, FileText, CheckCircle, Clock } from 'lucide-react'
+import React, { useState } from 'react';
+import { Upload, Shield, FileText } from 'lucide-react';
 
 export default function ComplianceTwin() {
-  const [policies, setPolicies] = useState([
+  const [policies] = useState([
     { name: 'Corporate Privacy Policy v1.4.pdf', size: '2.4 MB', uploaded: '2 days ago', status: 'SYNCHRONIZED', chunks: 142 },
     { name: 'Database & Data Security controls.md', size: '18 KB', uploaded: '3 days ago', status: 'SYNCHRONIZED', chunks: 24 },
     { name: 'SEC Cyber Risk Policy Draft.docx', size: '1.2 MB', uploaded: 'Just now', status: 'PROCESSING', chunks: 0 },
-  ])
+  ]);
 
-  const [gaps, setGaps] = useState([
+  const [gaps] = useState([
     { id: 1, title: 'Inadequate Data Retention Policy', policy: 'Corporate Privacy Policy v1.4.pdf', regulation: 'DPDP Act Section 11', severity: 'HIGH', status: 'OPEN', description: 'Your policy permits indefinite data storage. Under the DPDP Act, personal data must be erased as soon as the purpose for collection is served.' },
     { id: 2, title: 'Database Encryption Key Strength', policy: 'Database & Data Security controls.md', regulation: 'SEC Cyber Disclosure Rule 12', severity: 'CRITICAL', status: 'OPEN', description: 'Your current controls mandate AES-128 encryption. The revised guidelines require AES-256 for public-facing database instances.' },
-  ])
+  ]);
 
   return (
     <div className="space-y-6">
@@ -35,7 +35,7 @@ export default function ComplianceTwin() {
             <p className="text-[10px] text-slate-500 mt-1 max-w-[200px] leading-relaxed">
               Support PDF, Markdown, DOCX. Files are parsed, chunked, and vectorized automatically.
             </p>
-            <button className="mt-4 px-3 py-1.5 rounded-lg bg-indigo-600/30 text-indigo-400 border border-indigo-500/20 text-[10px] font-semibold">
+            <button className="mt-4 px-3 py-1.5 rounded-lg bg-indigo-600/30 text-indigo-400 border border-indigo-500/20 text-[10px] font-bold">
               Select Files
             </button>
           </div>
@@ -74,7 +74,7 @@ export default function ComplianceTwin() {
               <div className="w-1.5 h-6 rounded-full bg-rose-500"></div>
               <h3 className="font-display font-semibold text-slate-200">Active Compliance Gaps</h3>
             </div>
-            <span className="text-[10px] text-rose-400 font-semibold px-2 py-0.5 rounded bg-rose-500/10 border border-rose-500/10">
+            <span className="text-[10px] text-rose-455 font-bold px-2 py-0.5 rounded bg-rose-500/10 border border-rose-500/10">
               Needs Attention
             </span>
           </div>
@@ -93,7 +93,7 @@ export default function ComplianceTwin() {
                     </span>
                     <h4 className="text-xs font-semibold text-slate-200">{gap.title}</h4>
                   </div>
-                  <span className="text-[9px] text-indigo-400 font-medium">{gap.regulation}</span>
+                  <span className="text-[9px] text-indigo-400 font-bold">{gap.regulation}</span>
                 </div>
 
                 <p className="text-[11px] text-slate-400 leading-relaxed mb-3">
@@ -101,12 +101,12 @@ export default function ComplianceTwin() {
                 </p>
 
                 <div className="flex items-center justify-between pt-3 border-t border-slate-900 text-[10px] text-slate-500">
-                  <span className="truncate max-w-[250px]">Mapped Document: {gap.policy}</span>
+                  <span className="truncate max-w-[250px] font-medium">Mapped Document: {gap.policy}</span>
                   <div className="flex gap-2">
-                    <button className="text-[9px] px-2 py-1 rounded bg-slate-850 hover:bg-slate-800 text-slate-300 border border-slate-700">
+                    <button className="text-[9px] px-2 py-1 rounded bg-slate-850 hover:bg-slate-800 text-slate-300 border border-slate-750 font-semibold">
                       Create Jira Ticket
                     </button>
-                    <button className="text-[9px] px-2 py-1 rounded bg-indigo-600 hover:bg-indigo-500 text-white font-semibold shadow shadow-indigo-600/10">
+                    <button className="text-[9px] px-2 py-1 rounded bg-indigo-600 hover:bg-indigo-500 text-white font-bold shadow shadow-indigo-600/10">
                       Remediate Gap
                     </button>
                   </div>
@@ -117,5 +117,5 @@ export default function ComplianceTwin() {
         </div>
       </div>
     </div>
-  )
+  );
 }

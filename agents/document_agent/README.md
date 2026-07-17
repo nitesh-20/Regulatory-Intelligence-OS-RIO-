@@ -1,0 +1,1 @@
+# Document Agent\n\nParses PDFs, extracts layout text, runs simulated OCR, and generates vector embeddings.\n
