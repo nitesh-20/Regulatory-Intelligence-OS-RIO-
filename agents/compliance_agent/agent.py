@@ -1,7 +1,9 @@
 import json
 from agents.base import BaseAgent
 from typing import Dict, Any, List
+# pyrefly: ignore [missing-import]
 from app.database.models import Regulation, ComplianceTask, Policy
+# pyrefly: ignore [missing-import]
 from app.core.rag import search_rag
 
 class ComplianceAgent(BaseAgent):

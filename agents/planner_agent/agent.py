@@ -138,6 +138,10 @@ class PlannerAgent(BaseAgent):
                 print(f"[PlannerAgent] Error saving run log to database: {e}")
         
         # Construct final response using LLM to ensure McKinsey/Bain style
+        summary_text = state.get("summary", "Analysis completed successfully.")
+        gaps_count = len(state.get("gaps_found", []))
+        risk_score = state.get("risk_score", 45)
+        
         final_prompt = (
             f"Generate a final executive compliance report for the user's request: '{goal}'.\n"
             f"Agent Execution Sequence: {', '.join(plan['sequence'])}\n"
