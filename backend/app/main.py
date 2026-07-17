@@ -1,6 +1,8 @@
 import os
 import sys
+# pyrefly: ignore [missing-import]
 from fastapi import FastAPI
+# pyrefly: ignore [missing-import]
 from fastapi.middleware.cors import CORSMiddleware
 
 # Ensure the parent folders are in the python path to load the multi-agent system correctly
@@ -17,6 +19,15 @@ app = FastAPI(
     description="Enterprise Multi-Agent Regulatory intelligence & Compliance OS Backend Gateway",
     version="2.0.0"
 )
+
+@app.on_event("startup")
+def startup_event():
+    print("[API] Initiating startup database migration and seeding verification...")
+    try:
+        from app.database.seed import seed_database
+        seed_database()
+    except Exception as e:
+        print(f"[API] Startup seeding failed: {e}")
 
 # CORS Configuration
 app.add_middleware(

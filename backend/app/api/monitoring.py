@@ -63,7 +63,7 @@ async def get_logs(db: Session = Depends(get_db)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.post("/run")
+@router.api_route("/run", methods=["GET", "POST"])
 async def run_monitoring(db: Session = Depends(get_db)):
     mon_agent = get_agent_instance("monitoring_agent")
     org = db.query(Organization).first()

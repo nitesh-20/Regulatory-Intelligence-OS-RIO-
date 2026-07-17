@@ -15,9 +15,12 @@ class Settings(BaseSettings):
 
 settings = Settings()
 
-# Fallback database location (local sqlite inside workspace)
-db_dir = os.path.dirname(os.path.abspath(__file__))
-SQLITE_URL = f"sqlite:///{os.path.join(db_dir, 'rio_db.sqlite')}"
+# Fallback database location (local sqlite inside workspace or tmp in Vercel)
+if os.getenv("VERCEL") or os.getenv("NOW_REGION"):
+    SQLITE_URL = "sqlite:////tmp/rio_db.sqlite"
+else:
+    db_dir = os.path.dirname(os.path.abspath(__file__))
+    SQLITE_URL = f"sqlite:///{os.path.join(db_dir, 'rio_db.sqlite')}"
 
 # Attempt to initialize engine with Postgres, fallback to SQLite
 engine = None

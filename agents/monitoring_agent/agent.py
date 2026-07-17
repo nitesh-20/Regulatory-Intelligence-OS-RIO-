@@ -2,7 +2,9 @@ import datetime
 import json
 from agents.base import BaseAgent
 from typing import Dict, Any, List
+# pyrefly: ignore [missing-import]
 from app.database.models import Regulation, RegulationVersion
+# pyrefly: ignore [missing-import]
 from app.core.crawler import firecrawl_scrape
 
 class MonitoringAgent(BaseAgent):
@@ -33,7 +35,15 @@ class MonitoringAgent(BaseAgent):
         try:
             scraped_markdown = firecrawl_scrape(feed_url)
         except Exception as e:
-            print(f"[{self.name}] Crawler failed: {e}")
+            print(f"[{self.name}] Firecrawl scrape failed: {e}. Attempting direct HTTP fetch.")
+            try:
+                import requests
+                response = requests.get(feed_url, timeout=5)
+                response.raise_for_status()
+                scraped_markdown = response.text
+            except Exception as http_err:
+                print(f"[{self.name}] Direct HTTP fetch failed: {http_err}. Using mock data.")
+                scraped_markdown = ""
             
         if not scraped_markdown:
             scraped_markdown = (

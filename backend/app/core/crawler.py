@@ -1,6 +1,7 @@
 import os
 import re
 import requests
+# pyrefly: ignore [missing-import]
 import html2text
 
 FIRECRAWL_LOCAL_URL = os.getenv("FIRECRAWL_URL", "http://localhost:3002/v1/scrape")
