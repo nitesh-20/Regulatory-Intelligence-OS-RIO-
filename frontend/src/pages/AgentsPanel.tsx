@@ -14,7 +14,8 @@ import {
   Maximize2,
   Clock,
   Code,
-  Network
+  Network,
+  CheckCircle
 } from 'lucide-react';
 
 const agentConfigurations = [
@@ -153,7 +154,7 @@ export default function AgentsPanel() {
   };
 
   return (
-    <div className="space-y-4 text-zinc-200 select-none max-w-[1600px] mx-auto h-[calc(100vh-6rem)] flex flex-col">
+    <div className="space-y-4 text-zinc-200 select-none max-w-[1600px] mx-auto min-h-[calc(100vh-4rem)] flex flex-col">
       
       {/* 1. TOP HUD (Mission Control) */}
       <div className="shrink-0 p-4 rounded-xl bg-zinc-950/50 border border-zinc-900 shadow-sm relative overflow-hidden backdrop-blur-xl">
@@ -213,7 +214,7 @@ export default function AgentsPanel() {
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-4 gap-4 overflow-hidden">
         
         {/* 2. LEFT PANEL: Live Agent Fleet */}
-        <div className="lg:col-span-1 flex flex-col gap-2 overflow-y-auto pr-2 scrollbar-thin">
+        <div className="lg:col-span-1 flex flex-col gap-2 overflow-y-auto pr-2 scrollbar-thin min-h-[500px] max-h-[800px]">
           <div className="sticky top-0 bg-[#040405]/90 backdrop-blur-xl z-10 pb-2">
             <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest px-1 flex items-center gap-1.5">
               <Activity className="w-3 h-3" />
@@ -439,7 +440,7 @@ export default function AgentsPanel() {
       </div>
 
       {/* 5. BOTTOM PANEL: Live Terminal */}
-      <div className="shrink-0 h-[220px] rounded-xl bg-[#030303] border border-zinc-900 shadow-2xl flex flex-col overflow-hidden">
+      <div className="shrink-0 h-[280px] rounded-xl bg-[#030303] border border-zinc-900 shadow-2xl flex flex-col overflow-hidden mb-6">
         <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-900 bg-zinc-950/50 backdrop-blur-md">
           <div className="flex items-center gap-2">
             <Terminal className="w-3.5 h-3.5 text-zinc-500" />
