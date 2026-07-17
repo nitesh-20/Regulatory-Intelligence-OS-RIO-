@@ -29,6 +29,7 @@ class ComplianceAgent(BaseAgent):
         db = state.get("db")
         org_id = state.get("organization_id")
         policy_id = state.get("policy_id")
+        regulation_id = state.get("regulation_id")
         
         # Scenario A: Evaluating a specific Policy against active regulations (Triggered by Upload)
         if policy_id and db:
