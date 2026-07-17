@@ -28,8 +28,93 @@ class ComplianceAgent(BaseAgent):
         """
         db = state.get("db")
         org_id = state.get("organization_id")
-        regulation_id = state.get("regulation_id")
+        policy_id = state.get("policy_id")
         
+        # Scenario A: Evaluating a specific Policy against active regulations (Triggered by Upload)
+        if policy_id and db:
+            policy = db.query(Policy).filter(Policy.id == policy_id).first()
+            if not policy:
+                print(f"[{self.name}] Policy {policy_id} not found.")
+                return state
+                
+            print(f"[{self.name}] Running compliance mapping for newly uploaded policy: '{policy.title}'")
+            
+            # Fetch a few top regulations to check against
+            active_regs = db.query(Regulation).limit(3).all()
+            if not active_regs:
+                return state
+                
+            reg_context = "\n\n".join([f"Regulation: {r.title}\nAuthority: {r.authority}\nSummary: {r.summary}" for r in active_regs])
+            
+            prompt = (
+                f"You are a legal auditor. Map the following internal policy against these active regulations.\n\n"
+                f"Policy Name: \"{policy.title}\"\n"
+                f"Policy Content:\n\"\"\"\n{policy.content[:15000]}\n\"\"\"\n\n"
+                f"Active Regulations:\n\"\"\"\n{reg_context}\n\"\"\"\n\n"
+                f"Compare the policy against these regulations and identify if there are any gaps.\n"
+                f"Return a JSON list of identified gaps. Each gap MUST contain:\n"
+                f"- \"clause\": Name of the regulatory clause/concern.\n"
+                f"- \"gap_details\": Detailed explanation of why the gap exists and which specific regulation requires the change.\n"
+                f"- \"business_impact\": Explain the operational, financial, and compliance impact.\n"
+                f"- \"severity\": Severity (CRITICAL, HIGH, MEDIUM, LOW).\n"
+                f"- \"remediation_plan\": Direct step-by-step remediation plan to align the policy.\n"
+                f"- \"owner\": Suggested owner team (e.g., Security Team, Legal Team).\n"
+                f"- \"deadline\": Suggested deadline (e.g., 7 Days, 30 Days).\n"
+                f"If there are no gaps, return an empty list [].\n"
+                f"Do not include markdown tags like ```json, return raw JSON string only."
+            )
+            
+            gaps = []
+            try:
+                response = self.client.models.generate_content(
+                    model='gemini-2.5-flash',
+                    contents=prompt
+                )
+                raw_text = response.text.strip()
+                if raw_text.startswith("```"):
+                    lines = raw_text.splitlines()
+                    if lines[0].startswith("```"): lines = lines[1:]
+                    if lines[-1].startswith("```"): lines = lines[:-1]
+                    raw_text = "\n".join(lines).strip()
+                    
+                parsed_gaps = json.loads(raw_text)
+                if isinstance(parsed_gaps, list):
+                    for g in parsed_gaps:
+                        gaps.append(g)
+                        
+                # Save tasks
+                for r in active_regs:
+                    db.query(ComplianceTask).filter(
+                        ComplianceTask.organization_id == org_id,
+                        ComplianceTask.regulation_id == r.id,
+                        ComplianceTask.title.like(f"%{policy.title}%")
+                    ).delete(synchronize_session=False)
+                    
+                for g in gaps:
+                    desc_md = f"**Why the gap exists:**\n{g.get('gap_details', '')}\n\n**Business Impact:**\n{g.get('business_impact', 'Unknown')}"
+                    remed_md = f"{g.get('remediation_plan', '')}\n\n**Owner:** {g.get('owner', 'Compliance Team')}\n**Deadline:** {g.get('deadline', 'TBD')}"
+                    
+                    task = ComplianceTask(
+                        organization_id=org_id,
+                        regulation_id=active_regs[0].id, # Link to primary reg for now
+                        title=f"{g.get('clause', 'Compliance Gap')} Gap (in {policy.title})",
+                        description=desc_md,
+                        severity=g.get('severity', 'MEDIUM') if g.get('severity') in ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'] else 'MEDIUM',
+                        status="open",
+                        remediation_plan=remed_md
+                    )
+                    db.add(task)
+                db.commit()
+                print(f"[{self.name}] Generated {len(gaps)} compliance tasks for policy {policy.title}.")
+            except Exception as e:
+                db.rollback()
+                print(f"[{self.name}] Error analyzing policy against regulations: {e}")
+                
+            state["gaps_found"] = gaps
+            state["status_compliance_agent"] = "SUCCESS"
+            return state
+
+        # Scenario B: Evaluating a specific Regulation against vector DB (Triggered by Planner/Scheduler)
         reg_title = "DPDP Data Consent Architecture Framework"
         reg_id = None
         
@@ -109,6 +194,9 @@ class ComplianceAgent(BaseAgent):
                         "gap_details": g.get("gap_details", "No detailed discrepancy logged."),
                         "severity": g.get("severity", "MEDIUM"),
                         "status": "OPEN",
+                        "business_impact": g.get("business_impact", "Unknown"),
+                        "owner": g.get("owner", "Compliance Team"),
+                        "deadline": g.get("deadline", "TBD"),
                         "remediation_plan": g.get("remediation_plan", "Update internal policy controls.")
                     })
         except Exception as e:
@@ -122,6 +210,9 @@ class ComplianceAgent(BaseAgent):
                     "gap_details": "Corporate Policy permits indefinite storage of logs. DPDP Act requires deletion.",
                     "severity": "HIGH",
                     "status": "OPEN",
+                    "business_impact": "Unknown",
+                    "owner": "Compliance Team",
+                    "deadline": "TBD",
                     "remediation_plan": "Add 7-year storage limit to consent policy."
                 }
             ]

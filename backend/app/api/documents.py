@@ -32,7 +32,8 @@ async def get_documents(db: Session = Depends(get_db)):
                 "size": f"{size_kb} KB",
                 "uploaded": "Activated via Seed" if p.version_tag == "1.4.0" or p.version_tag == "1.0.0" else "Just now",
                 "status": "SYNCHRONIZED",
-                "chunks": chunks
+                "chunks": chunks,
+                "metadata": p.metadata_payload or {}
             })
         return results
     except Exception as e:
@@ -73,9 +74,23 @@ async def upload_document(
         policy_title = result.get("policy_title", file.filename)
         cleaned_markdown = result.get("cleaned_markdown", "")
         
-        # Add to RAG vector database indexing
+        # 1. Run DocumentPipeline (Chunk & Qdrant)
         if policy_id and cleaned_markdown:
-            index_policy(policy_id, policy_title, cleaned_markdown)
+            from app.core.document_pipeline import DocumentPipeline
+            pipeline = DocumentPipeline()
+            pipeline.process_and_index({
+                "id": policy_id,
+                "title": policy_title,
+                "category": result.get("metadata", {}).get("category", "General"),
+                "authority": result.get("metadata", {}).get("owner", "Internal"),
+                "raw_text": cleaned_markdown
+            })
+            
+        # 2. Run Compliance Mapping
+        comp_agent = get_agent_instance("compliance_agent")
+        if comp_agent and policy_id:
+            state["policy_id"] = policy_id
+            comp_agent.process(state)
 
         new_doc = {
             "id": policy_id,

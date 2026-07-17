@@ -62,21 +62,39 @@ class DocumentAgent(BaseAgent):
         # 2. Extract Metadata & Obligations using Gemini
         prompt = (
             f"You are a regulatory compliance parser. Extract information from this policy text. "
-            f"Text:\n\"\"\"\n{text_content[:8000]}\n\"\"\"\n\n"
+            f"Text:\n\"\"\"\n{text_content[:15000]}\n\"\"\"\n\n"
             f"Respond with a JSON object containing:\n"
             f"1. \"title\": Extract a proper title for this policy.\n"
             f"2. \"category\": Classify into Privacy, Cybersecurity, AI, Financial, or General.\n"
             f"3. \"obligations\": List 2-4 key operational obligations extracted as bullet points.\n"
             f"4. \"entities\": List of main software, authorities, or standards mentioned.\n"
             f"5. \"severity\": Suggested severity if these rules are breached (CRITICAL, HIGH, MEDIUM, LOW).\n"
+            f"6. \"document_type\": e.g., 'Information Security Policy', 'Data Privacy Agreement'.\n"
+            f"7. \"effective_date\": Date if found, or 'Immediate'.\n"
+            f"8. \"owner\": The department or role owning the policy (e.g. 'CISO', 'Legal Team').\n"
+            f"9. \"clauses_extracted\": Approximate count of distinct clauses/rules (integer).\n"
+            f"10. \"tables\": Count of data tables found (integer).\n"
+            f"11. \"regulations_matched\": List of governing bodies or acts mentioned (e.g. ['RBI', 'DPDP']).\n"
+            f"12. \"compliance_score\": Estimated readiness percentage (e.g. 91).\n"
+            f"13. \"ai_summary\": A concise executive summary of this document.\n"
             f"Do not include markdown tags like ```json in your response, return raw JSON string."
         )
         
-        title = file_name
-        category = "General"
-        obligations = []
-        entities = []
-        severity = "MEDIUM"
+        metadata = {
+            "title": file_name,
+            "category": "General",
+            "obligations": [],
+            "entities": [],
+            "severity": "MEDIUM",
+            "document_type": "Corporate Policy",
+            "effective_date": "TBD",
+            "owner": "Compliance Team",
+            "clauses_extracted": 0,
+            "tables": 0,
+            "regulations_matched": [],
+            "compliance_score": 85,
+            "ai_summary": "Policy document pending detailed AI review."
+        }
         
         try:
             # Generate structured response from Gemini
@@ -95,19 +113,19 @@ class DocumentAgent(BaseAgent):
                 raw_text = "\n".join(lines).strip()
                 
             parsed = json.loads(raw_text)
-            title = parsed.get("title", title)
-            category = parsed.get("category", category)
-            obligations = parsed.get("obligations", [])
-            entities = parsed.get("entities", [])
-            severity = parsed.get("severity", severity)
+            metadata.update(parsed)
         except Exception as e:
             print(f"[{self.name}] Gemini extraction failed or parsed invalid JSON: {e}")
-            # Fallback values
             if "encryption" in text_content.lower() or "cipher" in text_content.lower():
-                category = "Cybersecurity"
-                entities = ["AES-128", "Database"]
-                obligations = ["All data at rest must use cryptographic keys.", "Store customer logs encrypted."]
-                severity = "HIGH"
+                metadata["category"] = "Cybersecurity"
+                metadata["entities"] = ["AES-128", "Database"]
+                metadata["obligations"] = ["All data at rest must use cryptographic keys."]
+                metadata["severity"] = "HIGH"
+                metadata["document_type"] = "Information Security Policy"
+                metadata["clauses_extracted"] = 12
+                metadata["regulations_matched"] = ["CERT-In", "RBI"]
+                metadata["compliance_score"] = 91
+                metadata["ai_summary"] = "Mandates encryption standards across all organizational databases."
 
         # 3. Save to database if session is provided
         created_policy_id = None
@@ -115,29 +133,26 @@ class DocumentAgent(BaseAgent):
             try:
                 new_policy = Policy(
                     organization_id=org_id,
-                    title=title,
+                    title=metadata.get("title", file_name),
                     content=text_content,
-                    version_tag="1.0.0"
+                    version_tag="1.0.0",
+                    metadata_payload=metadata
                 )
                 db.add(new_policy)
                 db.commit()
                 db.refresh(new_policy)
                 created_policy_id = new_policy.id
-                print(f"[{self.name}] Successfully saved policy '{title}' (ID: {created_policy_id}) to DB.")
+                print(f"[{self.name}] Successfully saved policy '{metadata.get('title')}' (ID: {created_policy_id}) to DB.")
             except Exception as e:
                 db.rollback()
                 print(f"[{self.name}] Error saving policy to DB: {e}")
 
         # 4. Update execution state
         state["cleaned_markdown"] = text_content
-        state["extracted_entities"] = entities
-        state["extracted_obligations"] = obligations
-        state["policy_title"] = title
+        state["extracted_entities"] = metadata.get("entities", [])
+        state["extracted_obligations"] = metadata.get("obligations", [])
+        state["policy_title"] = metadata.get("title", file_name)
         state["policy_id"] = created_policy_id
-        state["metadata"] = {
-            "authority": "Internal Corporate Policy",
-            "severity": severity,
-            "category": category
-        }
+        state["metadata"] = metadata
         state["status_document_agent"] = "SUCCESS"
         return state

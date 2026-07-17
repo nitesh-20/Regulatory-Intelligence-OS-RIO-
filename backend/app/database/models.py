@@ -161,6 +161,7 @@ class Policy(Base):
     title = Column(String(255), nullable=False)
     content = Column(Text, nullable=False)
     version_tag = Column(String(50), default="1.0.0")
+    metadata_payload = Column(JSON, default=dict)
     created_at = Column(DateTime(timezone=True), default=datetime.datetime.utcnow)
     updated_at = Column(DateTime(timezone=True), default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
 
